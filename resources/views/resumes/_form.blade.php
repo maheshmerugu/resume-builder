@@ -20,10 +20,6 @@
 @endphp
 
 <div class="py-6" x-data="resumeForm(@js($init))">
-    <template x-teleport="#resume-progress-header">
-        @include('partials.resume-completeness-header')
-    </template>
-
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
         @if (session('status'))
@@ -214,8 +210,11 @@
                 </div>
             </div>
 
-            {{-- ============ RIGHT: LIVE PREVIEW ============ --}}
-            <div class="lg:sticky lg:top-6 self-start">
+            {{-- ============ RIGHT: COMPLETENESS + PREVIEW ============ --}}
+            <div class="space-y-4 lg:sticky lg:top-6 lg:self-start">
+                @include('partials.resume-completeness-header')
+
+                <div>
                 <div class="mb-2 flex items-center justify-between">
                     <span class="text-sm font-medium text-gray-600">Live Preview</span>
                     <span class="text-xs text-gray-400" x-text="resume.template + ' template'"></span>
@@ -316,6 +315,7 @@
                             </div>
                         </template>
                     </div>
+                </div>
                 </div>
             </div>
         </form>

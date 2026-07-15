@@ -10,7 +10,6 @@
                 <h2 class="mt-1 truncate text-xl font-bold text-gray-900 sm:text-2xl">{{ $resume->title }}</h2>
                 <p class="mt-0.5 text-sm text-gray-500">Updated {{ $resume->updated_at->diffForHumans() }}</p>
             </div>
-            <div id="resume-progress-header" class="w-full min-w-0 lg:max-w-sm xl:max-w-md"></div>
             <div class="flex shrink-0 flex-wrap items-center gap-2">
                 <a href="{{ route('resumes.show', $resume) }}" class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Preview</a>
                 <a href="{{ route('resumes.pdf', $resume) }}" class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">PDF</a>
