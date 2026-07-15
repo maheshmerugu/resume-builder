@@ -54,6 +54,11 @@ class Plan extends Model
         return $this->hasMany(Subscription::class);
     }
 
+    public function scopePaid($query)
+    {
+        return $query->where('price', '>', 0);
+    }
+
     public function isFree(): bool
     {
         return $this->price <= 0;

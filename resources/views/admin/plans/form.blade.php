@@ -1,13 +1,12 @@
-<x-app-layout>
+<x-admin-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $plan->exists ? 'Edit Plan: '.$plan->name : 'New Plan' }}</h2>
-            <a href="{{ route('admin.plans.index') }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to plans</a>
+        <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h1 class="truncate text-lg font-bold text-slate-900 sm:text-xl">{{ $plan->exists ? 'Edit Plan: '.$plan->name : 'New Plan' }}</h1>
+            <a href="{{ route('admin.plans.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">&larr; Back to plans</a>
         </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <div class="max-w-3xl">
             <div class="bg-white rounded-xl shadow-sm p-6">
                 @if ($errors->any())
                     <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -108,10 +107,6 @@
                             Featured (Most Popular)
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" name="is_default" value="1" @checked(old('is_default', $plan->is_default)) class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                            Default (Free fallback)
-                        </label>
-                        <label class="inline-flex items-center gap-2 text-sm text-gray-700">
                             <input type="checkbox" name="watermark" value="1" @checked(old('watermark', $plan->watermark)) class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                             Watermark PDF
                         </label>
@@ -125,6 +120,5 @@
                     </div>
                 </form>
             </div>
-        </div>
     </div>
-</x-app-layout>
+</x-admin-layout>

@@ -24,7 +24,7 @@
 </head>
 <body>
     @if (! empty($watermark))
-        <div class="rf-watermark">ResumeForge</div>
+        <div class="rf-watermark">airesumebuilder.co.in</div>
     @endif
     @include($template, ['resume' => $resume])
 </body>

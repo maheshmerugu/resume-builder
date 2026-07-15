@@ -1,52 +1,61 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('ATS Score Checker') }}</h2>
+        <div>
+            <h1 class="text-xl font-bold text-slate-900 sm:text-2xl">ATS Score Checker</h1>
+            <p class="text-sm text-slate-500">Compare your resume against a job description</p>
+        </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl space-y-4">
+        @include('partials.alert')
 
-            @if ($errors->any())
-                <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
-                    <ul class="list-disc ms-5">
-                        @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
-                    </ul>
+        @if ($errors->any())
+            <div class="admin-card border-red-200 bg-red-50 px-5 py-4 text-sm text-red-800">
+                <ul class="list-disc ps-5">
+                    @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if ($resumes->isEmpty())
+            <div class="admin-card p-10 text-center">
+                <p class="text-slate-600">You need a resume before running an ATS check.</p>
+                <a href="{{ route('resumes.create') }}" class="admin-btn-primary mt-4 inline-flex">Create a resume</a>
+            </div>
+        @else
+            @php
+                $selectedResume = $resumes->firstWhere('id', $selectedResumeId) ?? $resumes->first();
+            @endphp
+            <div class="admin-card p-5">
+                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Resume progress</p>
+                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Complete your resume before running ATS for better scores.</p>
+                @include('partials.resume-completeness-inline', ['resume' => $selectedResume])
+            </div>
+
+            <form method="POST" action="{{ route('ats.store') }}" class="admin-card space-y-5 p-6">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Select resume</label>
+                    <select name="resume_id" class="mt-1 w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        @foreach ($resumes as $r)
+                            <option value="{{ $r->id }}" @selected($selectedResumeId === $r->id)>{{ $r->title }} — {{ $r->completeness() }}% complete</option>
+                        @endforeach
+                    </select>
                 </div>
-            @endif
 
-            @if ($resumes->isEmpty())
-                <div class="bg-white rounded-xl shadow-sm p-10 text-center">
-                    <p class="text-gray-600">You need a resume before running an ATS check.</p>
-                    <a href="{{ route('resumes.create') }}" class="mt-4 inline-block rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500">Create a resume</a>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Job title (optional)</label>
+                    <input type="text" name="job_title" value="{{ old('job_title') }}" placeholder="Senior PHP Developer" class="mt-1 w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
-            @else
-                <form method="POST" action="{{ route('ats.store') }}" class="bg-white rounded-xl shadow-sm p-6 space-y-5">
-                    @csrf
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Select resume</label>
-                        <select name="resume_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            @foreach ($resumes as $r)
-                                <option value="{{ $r->id }}" @selected($selectedResumeId === $r->id)>{{ $r->title }} — {{ $r->full_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Job title (optional)</label>
-                        <input type="text" name="job_title" value="{{ old('job_title') }}" placeholder="Senior PHP Developer" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Paste the job description</label>
+                    <textarea name="job_description" rows="12" required class="mt-1 w-full rounded-xl border-slate-200 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Paste the full job posting here...">{{ old('job_description') }}</textarea>
+                    <p class="mt-1 text-xs text-slate-500">We compare your resume against the keywords in this description and give you a match score with suggestions.</p>
+                </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Paste the job description</label>
-                        <textarea name="job_description" rows="12" required class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Paste the full job posting here...">{{ old('job_description') }}</textarea>
-                        <p class="mt-1 text-xs text-gray-500">We compare your resume against the keywords in this description and give you a match score with suggestions.</p>
-                    </div>
-
-                    <button type="submit" class="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-500">
-                        Analyze My Resume
-                    </button>
-                </form>
-            @endif
-        </div>
+                <button type="submit" class="admin-btn-primary">Analyze My Resume</button>
+            </form>
+        @endif
     </div>
 </x-app-layout>

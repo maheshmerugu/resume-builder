@@ -6,14 +6,15 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Razorpay\Api\Api;
+use Razorpay\Api\Errors\SignatureVerificationError;
 
 class PlanController extends Controller
 {
     public function index(Request $request): View
     {
-        $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
+        $plans = Plan::where('is_active', true)->paid()->orderBy('sort_order')->get();
         $currentPlan = $request->user()->currentPlan();
         $subscription = $request->user()->activeSubscription;
 
@@ -22,30 +23,76 @@ class PlanController extends Controller
 
     public function checkout(Request $request, Plan $plan): View|RedirectResponse
     {
-        abort_unless($plan->is_active, 404);
+        abort_unless($plan->is_active && ! $plan->isFree(), 404);
 
-        if ($plan->isFree()) {
-            return $this->downgradeToFree($request);
+        $razorpayKeyId = config('razorpay.key_id');
+        $razorpayKeySecret = config('razorpay.key_secret');
+
+        $razorpayOrder = null;
+
+        if ($razorpayKeyId && $razorpayKeySecret && ! str_starts_with($razorpayKeyId, 'rzp_test_XXX')) {
+            $api = new Api($razorpayKeyId, $razorpayKeySecret);
+
+            $razorpayOrder = $api->order->create([
+                'amount' => $plan->price * 100,
+                'currency' => config('razorpay.currency', 'INR'),
+                'receipt' => 'plan_' . $plan->id . '_user_' . $request->user()->id . '_' . time(),
+                'notes' => [
+                    'plan_id' => $plan->id,
+                    'plan_name' => $plan->name,
+                    'user_id' => $request->user()->id,
+                ],
+            ]);
         }
 
-        return view('plans.checkout', ['plan' => $plan]);
+        return view('plans.checkout', [
+            'plan' => $plan,
+            'razorpayKeyId' => $razorpayKeyId,
+            'razorpayOrder' => $razorpayOrder,
+            'userName' => $request->user()->name,
+            'userEmail' => $request->user()->email,
+        ]);
+    }
+
+    public function subscribe(Request $request, Plan $plan): RedirectResponse
+    {
+        abort_unless($plan->is_active && ! $plan->isFree(), 404);
+
+        return redirect()->route('plans.checkout', $plan);
     }
 
     /**
-     * Activate a paid plan. Payment is simulated here — plug a gateway
-     * (e.g. Razorpay) into this method and only continue on verified success.
+     * Verify Razorpay payment and activate subscription.
      */
-    public function subscribe(Request $request, Plan $plan): RedirectResponse
+    public function verifyPayment(Request $request, Plan $plan): RedirectResponse
     {
-        abort_unless($plan->is_active, 404);
+        abort_unless($plan->is_active && ! $plan->isFree(), 404);
+
+        $request->validate([
+            'razorpay_payment_id' => 'required|string',
+            'razorpay_order_id' => 'required|string',
+            'razorpay_signature' => 'required|string',
+        ]);
+
+        $razorpayKeyId = config('razorpay.key_id');
+        $razorpayKeySecret = config('razorpay.key_secret');
+
+        try {
+            $api = new Api($razorpayKeyId, $razorpayKeySecret);
+
+            $api->utility->verifyPaymentSignature([
+                'razorpay_order_id' => $request->razorpay_order_id,
+                'razorpay_payment_id' => $request->razorpay_payment_id,
+                'razorpay_signature' => $request->razorpay_signature,
+            ]);
+        } catch (SignatureVerificationError $e) {
+            return redirect()
+                ->route('plans.checkout', $plan)
+                ->with('error', 'Payment verification failed. Please try again.');
+        }
 
         $user = $request->user();
 
-        if ($plan->isFree()) {
-            return $this->downgradeToFree($request);
-        }
-
-        // Expire any current active subscription before starting the new one.
         $user->subscriptions()->where('status', 'active')->update(['status' => 'cancelled']);
 
         $duration = $plan->durationDays();
@@ -58,12 +105,15 @@ class PlanController extends Controller
             'ends_at' => $duration ? now()->addDays($duration) : null,
             'downloads_used' => 0,
             'amount_paid' => $plan->price,
-            'payment_reference' => 'MOCK-' . strtoupper(Str::random(10)),
+            'payment_reference' => $request->razorpay_payment_id,
+            'razorpay_order_id' => $request->razorpay_order_id,
+            'razorpay_payment_id' => $request->razorpay_payment_id,
+            'razorpay_signature' => $request->razorpay_signature,
         ]);
 
         return redirect()
             ->route('plans.index')
-            ->with('status', "You are now on the {$plan->name} plan. Enjoy!");
+            ->with('status', "Payment successful! You are now on the {$plan->name} plan.");
     }
 
     public function cancel(Request $request): RedirectResponse
@@ -72,15 +122,6 @@ class PlanController extends Controller
 
         return redirect()
             ->route('plans.index')
-            ->with('status', 'Your subscription was cancelled. You are back on the Free plan.');
-    }
-
-    protected function downgradeToFree(Request $request): RedirectResponse
-    {
-        $request->user()->subscriptions()->where('status', 'active')->update(['status' => 'cancelled']);
-
-        return redirect()
-            ->route('plans.index')
-            ->with('status', 'You are on the Free plan.');
+            ->with('status', 'Your subscription was cancelled. Subscribe again to continue using premium features.');
     }
 }

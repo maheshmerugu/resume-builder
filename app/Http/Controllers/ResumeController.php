@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Resume;
+use App\Support\ResumeThemes;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,25 +22,36 @@ class ResumeController extends Controller
 
     public function create(Request $request): View|RedirectResponse
     {
+        if (! $request->user()->hasPlanAccess()) {
+            return $this->planLimitRedirect('Please subscribe to a plan to create resumes.');
+        }
+
         if (! $request->user()->canCreateResume()) {
             return $this->planLimitRedirect(
                 'You have reached the resume limit for your plan. Upgrade to create more.'
             );
         }
 
+        $template = ResumeThemes::resolve($request->query('template', 'modern'));
+
         $resume = new Resume([
             'title' => 'Untitled Resume',
-            'template' => 'modern',
+            'template' => $template,
         ]);
 
         return view('resumes.create', [
             'resume' => $resume,
-            'templates' => Resume::TEMPLATES,
+            'templates' => Resume::templates(),
+            'themeCatalog' => ResumeThemes::catalog(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        if (! $request->user()->hasPlanAccess()) {
+            return $this->planLimitRedirect('Please subscribe to a plan to create resumes.');
+        }
+
         if (! $request->user()->canCreateResume()) {
             return $this->planLimitRedirect(
                 'You have reached the resume limit for your plan. Upgrade to create more.'
@@ -62,7 +74,7 @@ class ResumeController extends Controller
 
         return view('resumes.show', [
             'resume' => $resume,
-            'template' => 'resumes.templates.' . $this->safeTemplate($resume->template),
+            'template' => 'resumes.templates.themed',
         ]);
     }
 
@@ -72,7 +84,8 @@ class ResumeController extends Controller
 
         return view('resumes.edit', [
             'resume' => $resume,
-            'templates' => Resume::TEMPLATES,
+            'templates' => Resume::templates(),
+            'themeCatalog' => ResumeThemes::catalog(),
         ]);
     }
 
@@ -102,6 +115,10 @@ class ResumeController extends Controller
     {
         $this->authorizeResume($resume);
 
+        if (! $request->user()->hasPlanAccess()) {
+            return $this->planLimitRedirect('Please subscribe to a plan to duplicate resumes.');
+        }
+
         if (! $request->user()->canCreateResume()) {
             return $this->planLimitRedirect(
                 'You have reached the resume limit for your plan. Upgrade to duplicate resumes.'
@@ -123,6 +140,10 @@ class ResumeController extends Controller
 
         $user = $request->user();
 
+        if (! $user->hasPlanAccess()) {
+            return $this->planLimitRedirect('Please subscribe to a plan to download PDFs.');
+        }
+
         if (! $user->canDownload()) {
             return $this->planLimitRedirect(
                 'You have used all PDF downloads for your plan this period. Upgrade for unlimited downloads.'
@@ -131,11 +152,13 @@ class ResumeController extends Controller
 
         $pdf = Pdf::loadView('resumes.pdf', [
             'resume' => $resume,
-            'template' => 'resumes.templates.' . $this->safeTemplate($resume->template),
-            'watermark' => (bool) ($user->currentPlan()?->watermark),
+            'template' => 'resumes.templates.themed',
+            'watermark' => $user->billingEnabled() && (bool) ($user->currentPlan()?->watermark),
         ])->setPaper('a4');
 
-        $user->recordDownload();
+        if ($user->billingEnabled()) {
+            $user->recordDownload();
+        }
 
         $filename = Str::slug($resume->full_name ?: $resume->title ?: 'resume') . '.pdf';
 
@@ -154,7 +177,7 @@ class ResumeController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:120'],
-            'template' => ['required', 'string', 'in:' . implode(',', array_keys(Resume::TEMPLATES))],
+            'template' => ['required', 'string', 'in:' . implode(',', ResumeThemes::ids())],
             'full_name' => ['nullable', 'string', 'max:120'],
             'headline' => ['nullable', 'string', 'max:160'],
             'email' => ['nullable', 'string', 'max:160'],
@@ -257,7 +280,7 @@ class ResumeController extends Controller
 
     protected function safeTemplate(?string $template): string
     {
-        return array_key_exists($template, Resume::TEMPLATES) ? $template : 'modern';
+        return ResumeThemes::resolve($template ?? 'modern');
     }
 
     protected function authorizeResume(Resume $resume): void

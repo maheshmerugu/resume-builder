@@ -1,13 +1,12 @@
-<x-app-layout>
+<x-admin-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $user->name }}</h2>
-            <a href="{{ route('admin.users') }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to users</a>
+        <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h1 class="truncate text-lg font-bold text-slate-900 sm:text-xl">{{ $user->name }}</h1>
+            <a href="{{ route('admin.users') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">&larr; Back to users</a>
         </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="max-w-5xl space-y-6">
 
             @if (session('status'))
                 <div class="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
@@ -75,5 +74,4 @@
                 @endforelse
             </div>
         </div>
-    </div>
-</x-app-layout>
+</x-admin-layout>

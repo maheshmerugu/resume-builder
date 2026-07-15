@@ -19,6 +19,9 @@ class Subscription extends Model
         'downloads_used',
         'amount_paid',
         'payment_reference',
+        'razorpay_order_id',
+        'razorpay_payment_id',
+        'razorpay_signature',
     ];
 
     protected function casts(): array

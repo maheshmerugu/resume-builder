@@ -3,22 +3,43 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminPlanController;
 use App\Http\Controllers\AtsCheckController;
+use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ResumeAiController;
 use App\Http\Controllers\ResumeController;
+use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    $plans = \App\Models\Plan::where('is_active', true)->orderBy('sort_order')->get();
+Route::get('/favicon.ico', function () {
+    return response(file_get_contents(public_path('favicon.svg')), 200, [
+        'Content-Type' => 'image/svg+xml',
+        'Cache-Control' => 'public, max-age=604800',
+    ]);
+});
 
-    return view('welcome', compact('plans'));
+Route::get('/', function () {
+    $plans = \App\Models\Plan::where('is_active', true)->paid()->orderBy('sort_order')->get();
+    $themeCount = \App\Support\ResumeThemes::count();
+
+    return view('welcome', compact('plans', 'themeCount'));
 })->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Admin login (separate from user login)
+Route::middleware('guest')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AdminLoginController::class, 'create'])->name('login');
+    Route::post('/login', [AdminLoginController::class, 'store'])->name('login.store');
+});
+Route::post('admin/logout', [AdminLoginController::class, 'destroy'])->middleware('auth')->name('admin.logout');
+
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('themes', [ThemeController::class, 'index'])->name('themes.index');
+
     // Resume builder
+    Route::post('resumes/ai/generate', [ResumeAiController::class, 'generate'])->name('resumes.ai.generate');
     Route::get('resumes/{resume}/pdf', [ResumeController::class, 'pdf'])->name('resumes.pdf');
     Route::post('resumes/{resume}/duplicate', [ResumeController::class, 'duplicate'])->name('resumes.duplicate');
     Route::resource('resumes', ResumeController::class);
@@ -35,9 +56,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('plans/{plan}/checkout', [PlanController::class, 'checkout'])->name('plans.checkout');
     Route::post('plans/{plan}/subscribe', [PlanController::class, 'subscribe'])->name('plans.subscribe');
     Route::post('subscription/cancel', [PlanController::class, 'cancel'])->name('plans.cancel');
+
+    // Razorpay payment verification
+    Route::post('plans/{plan}/verify-payment', [PlanController::class, 'verifyPayment'])->name('plans.verifyPayment');
 });
 
-Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/users/{user}', [AdminController::class, 'showUser'])->name('users.show');

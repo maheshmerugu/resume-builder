@@ -94,27 +94,6 @@ class DatabaseSeeder extends Seeder
     {
         $plans = [
             [
-                'name' => 'Free',
-                'slug' => 'free',
-                'description' => 'Get started and try things out.',
-                'price' => 0,
-                'interval' => 'monthly',
-                'resume_limit' => 1,
-                'download_limit' => 1,
-                'edit_limit' => null,
-                'watermark' => true,
-                'features' => [
-                    '1 resume',
-                    '1 PDF download / month',
-                    'ATS score checker',
-                    'Watermarked PDF',
-                ],
-                'is_active' => true,
-                'is_featured' => false,
-                'is_default' => true,
-                'sort_order' => 1,
-            ],
-            [
                 'name' => 'Starter',
                 'slug' => 'starter',
                 'description' => 'Perfect for an active job search.',
@@ -135,7 +114,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'is_featured' => true,
                 'is_default' => false,
-                'sort_order' => 2,
+                'sort_order' => 1,
             ],
             [
                 'name' => 'Pro',
@@ -157,7 +136,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'is_featured' => false,
                 'is_default' => false,
-                'sort_order' => 3,
+                'sort_order' => 2,
             ],
             [
                 'name' => 'Lifetime',
@@ -179,13 +158,15 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'is_featured' => false,
                 'is_default' => false,
-                'sort_order' => 4,
+                'sort_order' => 3,
             ],
         ];
 
         foreach ($plans as $plan) {
             Plan::updateOrCreate(['slug' => $plan['slug']], $plan);
         }
+
+        Plan::where('slug', 'free')->delete();
 
         $this->command->info('Seeded ' . count($plans) . ' subscription plans.');
     }

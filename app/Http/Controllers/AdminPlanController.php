@@ -50,8 +50,8 @@ class AdminPlanController extends Controller
 
     public function destroy(Plan $plan): RedirectResponse
     {
-        if ($plan->is_default) {
-            return back()->with('status', 'You cannot delete the default (Free) plan.');
+        if ($plan->subscriptions()->where('status', 'active')->exists()) {
+            return back()->with('status', 'Cannot delete a plan with active subscriptions.');
         }
 
         $plan->delete();
@@ -68,7 +68,7 @@ class AdminPlanController extends Controller
             'name' => ['required', 'string', 'max:80'],
             'slug' => ['nullable', 'string', 'max:80', Rule::unique('plans', 'slug')->ignore($plan?->id)],
             'description' => ['nullable', 'string', 'max:255'],
-            'price' => ['required', 'integer', 'min:0'],
+            'price' => ['required', 'integer', 'min:1'],
             'currency' => ['required', 'string', 'max:8'],
             'interval' => ['required', Rule::in(array_keys(Plan::INTERVALS))],
             'period_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
@@ -83,7 +83,7 @@ class AdminPlanController extends Controller
         $validated['watermark'] = $request->boolean('watermark');
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['is_default'] = $request->boolean('is_default');
+        $validated['is_default'] = false;
         $validated['sort_order'] = $validated['sort_order'] ?? 0;
 
         $validated['features'] = collect(preg_split('/\r?\n/', (string) $request->input('features_raw')))
@@ -93,11 +93,6 @@ class AdminPlanController extends Controller
             ->all();
 
         unset($validated['features_raw']);
-
-        // Only one default plan allowed.
-        if ($validated['is_default']) {
-            Plan::where('id', '!=', $plan?->id)->update(['is_default' => false]);
-        }
 
         return $validated;
     }

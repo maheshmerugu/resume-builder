@@ -75,8 +75,25 @@ class User extends Authenticatable
             ->latestOfMany();
     }
 
+    public function billingEnabled(): bool
+    {
+        return (bool) config('billing.enabled', true);
+    }
+
     /**
-     * The plan the user is currently on (active subscription, or the default free plan).
+     * Whether the user may use paid features (create resumes, download PDFs, AI, etc.).
+     */
+    public function hasPlanAccess(): bool
+    {
+        if (! $this->billingEnabled()) {
+            return true;
+        }
+
+        return $this->currentPlan() !== null;
+    }
+
+    /**
+     * The plan the user is currently on (active subscription only).
      */
     public function currentPlan(): ?Plan
     {
@@ -86,7 +103,7 @@ class User extends Authenticatable
             return $subscription->plan;
         }
 
-        return Plan::where('is_default', true)->where('is_active', true)->first();
+        return null;
     }
 
     public function resumeLimit(): ?int
@@ -106,6 +123,14 @@ class User extends Authenticatable
 
     public function canCreateResume(): bool
     {
+        if (! $this->billingEnabled()) {
+            return true;
+        }
+
+        if (! $this->currentPlan()) {
+            return false;
+        }
+
         $limit = $this->resumeLimit();
 
         if (is_null($limit)) {
@@ -128,6 +153,14 @@ class User extends Authenticatable
 
     public function canDownload(): bool
     {
+        if (! $this->billingEnabled()) {
+            return true;
+        }
+
+        if (! $this->currentPlan()) {
+            return false;
+        }
+
         $limit = $this->downloadLimit();
 
         if (is_null($limit)) {

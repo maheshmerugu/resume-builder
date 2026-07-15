@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\ResumeCompleteness;
+use App\Support\ResumeThemes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -44,7 +46,7 @@ class Resume extends Model
     }
 
     /**
-     * Templates available for rendering.
+     * @deprecated Use ResumeThemes::labels() instead.
      *
      * @var array<string, string>
      */
@@ -53,6 +55,27 @@ class Resume extends Model
         'classic' => 'Classic',
         'minimal' => 'Minimal',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    public static function templates(): array
+    {
+        return ResumeThemes::labels();
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    public static function templateOptions(): array
+    {
+        return ResumeThemes::all();
+    }
+
+    public static function templateCount(): int
+    {
+        return ResumeThemes::count();
+    }
 
     public function user(): BelongsTo
     {
@@ -114,15 +137,14 @@ class Resume extends Model
 
     public function completeness(): int
     {
-        $checks = [
-            filled($this->full_name),
-            filled($this->email),
-            filled($this->summary),
-            ! empty($this->experience),
-            ! empty($this->education),
-            ! empty($this->skills),
-        ];
+        return ResumeCompleteness::for($this)['percent'];
+    }
 
-        return (int) round((count(array_filter($checks)) / count($checks)) * 100);
+    /**
+     * @return array{percent: int, checks: list<array<string, mixed>>, next: ?array<string, mixed>, label: string, status: string, tier: string}
+     */
+    public function completenessBreakdown(): array
+    {
+        return ResumeCompleteness::for($this);
     }
 }

@@ -1,61 +1,61 @@
-<x-app-layout>
+<x-admin-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Subscriptions</h2>
-            <a href="{{ route('admin.dashboard') }}" class="text-sm text-indigo-600 hover:underline">&larr; Admin</a>
-        </div>
+        <h1 class="text-xl font-bold text-slate-900 sm:text-2xl">Subscriptions</h1>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="space-y-6">
+        <div class="flex flex-wrap gap-2">
+            @foreach (['' => 'All', 'active' => 'Active', 'cancelled' => 'Cancelled', 'expired' => 'Expired'] as $value => $label)
+                <a href="{{ route('admin.subscriptions', ['status' => $value]) }}"
+                   class="rounded-full px-4 py-2 text-sm font-semibold transition {{ $status === $value ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
+                    {{ $label }}
+                </a>
+            @endforeach
+        </div>
 
-            <div class="flex flex-wrap gap-2">
-                @foreach (['' => 'All', 'active' => 'Active', 'cancelled' => 'Cancelled', 'expired' => 'Expired'] as $value => $label)
-                    <a href="{{ route('admin.subscriptions', ['status' => $value]) }}"
-                       class="rounded-full px-4 py-1.5 text-sm font-medium {{ $status === $value ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">
-                        {{ $label }}
-                    </a>
-                @endforeach
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm p-6 overflow-x-auto">
-                <table class="min-w-full text-sm">
+        <div class="admin-card">
+            <div class="overflow-x-auto">
+                <table class="admin-table min-w-full">
                     <thead>
-                        <tr class="text-left text-gray-500 border-b">
-                            <th class="py-2 pr-3 font-medium">User</th>
-                            <th class="py-2 px-3 font-medium">Plan</th>
-                            <th class="py-2 px-3 font-medium">Amount</th>
-                            <th class="py-2 px-3 font-medium">Status</th>
-                            <th class="py-2 px-3 font-medium">Started</th>
-                            <th class="py-2 px-3 font-medium">Ends</th>
-                            <th class="py-2 px-3 font-medium">Ref</th>
+                        <tr>
+                            <th>User</th>
+                            <th>Plan</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Started</th>
+                            <th>Ends</th>
+                            <th>Payment ID</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($subscriptions as $sub)
-                            <tr class="border-b last:border-0">
-                                <td class="py-3 pr-3">
-                                    <p class="font-medium text-gray-800">{{ $sub->user?->name ?? '—' }}</p>
-                                    <p class="text-xs text-gray-500">{{ $sub->user?->email }}</p>
+                            @php
+                                $statusClass = match($sub->status) {
+                                    'active' => 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+                                    'cancelled' => 'bg-amber-50 text-amber-700 ring-amber-100',
+                                    'expired' => 'bg-red-50 text-red-700 ring-red-100',
+                                    default => 'bg-slate-100 text-slate-700 ring-slate-200',
+                                };
+                            @endphp
+                            <tr>
+                                <td>
+                                    <p class="font-semibold text-slate-900">{{ $sub->user?->name ?? '—' }}</p>
+                                    <p class="text-xs text-slate-500">{{ $sub->user?->email }}</p>
                                 </td>
-                                <td class="py-3 px-3 text-gray-700">{{ $sub->plan?->name ?? '—' }}</td>
-                                <td class="py-3 px-3 text-gray-700">₹{{ number_format($sub->amount_paid) }}</td>
-                                <td class="py-3 px-3">
-                                    @php $c = ['active' => 'green', 'cancelled' => 'yellow', 'expired' => 'red'][$sub->status] ?? 'gray'; @endphp
-                                    <span class="rounded-full px-2 py-0.5 text-xs font-semibold bg-{{ $c }}-100 text-{{ $c }}-700">{{ ucfirst($sub->status) }}</span>
-                                </td>
-                                <td class="py-3 px-3 text-gray-500">{{ $sub->starts_at?->format('M j, Y') ?? '—' }}</td>
-                                <td class="py-3 px-3 text-gray-500">{{ $sub->ends_at?->format('M j, Y') ?? 'Never' }}</td>
-                                <td class="py-3 px-3 text-gray-400 text-xs">{{ $sub->payment_reference ?? '—' }}</td>
+                                <td>{{ $sub->plan?->name ?? '—' }}</td>
+                                <td class="font-semibold">₹{{ number_format($sub->amount_paid) }}</td>
+                                <td><span class="admin-badge ring-1 {{ $statusClass }}">{{ ucfirst($sub->status) }}</span></td>
+                                <td class="text-slate-500">{{ $sub->starts_at?->format('M j, Y') ?? '—' }}</td>
+                                <td class="text-slate-500">{{ $sub->ends_at?->format('M j, Y') ?? 'Never' }}</td>
+                                <td class="max-w-[120px] truncate text-xs text-slate-400">{{ $sub->payment_reference ?? '—' }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="py-6 text-center text-gray-500">No subscriptions found.</td></tr>
+                            <tr><td colspan="7" class="py-12 text-center text-slate-500">No subscriptions found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
-
-                <div class="mt-4">{{ $subscriptions->links() }}</div>
             </div>
+            <div class="border-t border-slate-100 px-6 py-4">{{ $subscriptions->links() }}</div>
         </div>
     </div>
-</x-app-layout>
+</x-admin-layout>

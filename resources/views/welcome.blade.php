@@ -3,8 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'ResumeForge') }} — Build a job-winning resume in minutes</title>
+    <title>{{ config('app.name', 'AI Resume Builder') }} — Build a job-winning resume in minutes</title>
     <meta name="description" content="Create a professional, ATS-friendly resume in minutes. Beautiful templates, a built-in ATS checker, and one-click PDF export.">
+    @include('partials.favicon')
 
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -16,8 +17,8 @@
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <a href="{{ route('home') }}" class="flex items-center gap-2 font-extrabold text-xl text-indigo-600">
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">R</span>
-                ResumeForge
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">A</span>
+                AI Resume Builder
             </a>
             <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
                 <a href="#features" class="hover:text-indigo-600">Features</a>
@@ -30,7 +31,7 @@
                     <a href="{{ url('/dashboard') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Dashboard</a>
                 @else
                     <a href="{{ route('login') }}" class="text-sm font-medium text-gray-600 hover:text-indigo-600">Log in</a>
-                    <a href="{{ route('register') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Get started — free</a>
+                    <a href="{{ route('register') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Get started</a>
                 @endauth
             </div>
         </div>
@@ -104,7 +105,7 @@
     {{-- Stats bar --}}
     <section class="border-y border-gray-100 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            @foreach ([['3','Beautiful templates'],['1M+','Resumes built'],['92%','Avg. ATS score'],['4.8★','User rating']] as $stat)
+            @foreach ([[$themeCount . '+', 'Beautiful themes'],['1M+','Resumes built'],['92%','Avg. ATS score'],['4.8★','User rating']] as $stat)
                 <div>
                     <p class="text-3xl font-extrabold text-indigo-600">{{ $stat[0] }}</p>
                     <p class="mt-1 text-sm text-gray-500">{{ $stat[1] }}</p>
@@ -117,7 +118,7 @@
     <section id="features" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div class="text-center max-w-2xl mx-auto">
             <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-900">Everything you need to land the job</h2>
-            <p class="mt-4 text-gray-600">From a blank page to a hireable resume — ResumeForge guides you the whole way.</p>
+            <p class="mt-4 text-gray-600">From a blank page to a hireable resume — AI Resume Builder guides you the whole way.</p>
         </div>
         <div class="mt-14 grid md:grid-cols-3 gap-8">
             @php
@@ -144,31 +145,24 @@
     <section id="templates" class="bg-gray-50 border-y border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
             <div class="text-center max-w-2xl mx-auto">
-                <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-900">Templates that make you stand out</h2>
-                <p class="mt-4 text-gray-600">Professionally designed and fully ATS-friendly. Switch anytime with one click.</p>
+                <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-900">50+ themes that make you stand out</h2>
+                <p class="mt-4 text-gray-600">Professionally designed and fully ATS-friendly. Pick from {{ $themeCount }} themes — switch anytime with one click.</p>
             </div>
-            <div class="mt-14 grid sm:grid-cols-3 gap-8">
-                @foreach ([['Modern','indigo'],['Classic','gray'],['Minimal','blue']] as $tpl)
-                    <div class="group rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-                        <div class="p-6 bg-{{ $tpl[1] }}-50">
-                            <div class="mx-auto max-w-[220px] bg-white rounded-lg shadow p-4 aspect-[3/4]">
-                                <div class="h-3 w-24 bg-{{ $tpl[1] }}-500 rounded"></div>
-                                <div class="mt-2 h-2 w-32 bg-gray-300 rounded"></div>
-                                <div class="mt-4 space-y-1.5">
-                                    <div class="h-2 w-full bg-gray-200 rounded"></div>
-                                    <div class="h-2 w-11/12 bg-gray-200 rounded"></div>
-                                    <div class="h-2 w-4/5 bg-gray-200 rounded"></div>
-                                </div>
-                                <div class="mt-4 h-2 w-20 bg-{{ $tpl[1] }}-400 rounded"></div>
-                                <div class="mt-2 space-y-1.5">
-                                    <div class="h-2 w-full bg-gray-200 rounded"></div>
-                                    <div class="h-2 w-10/12 bg-gray-200 rounded"></div>
-                                </div>
+            <div class="mt-8 text-center">
+                <a href="{{ auth()->check() ? route('themes.index') : route('register') }}" class="inline-flex rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500">
+                    Browse all {{ $themeCount }} themes
+                </a>
+            </div>
+            <div class="mt-10 grid gap-8 sm:grid-cols-3">
+                @foreach (\App\Support\ResumeThemes::featured(6) as $key => $meta)
+                    <div class="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                        @include('partials.theme-preview', ['theme' => $key])
+                        <div class="flex items-center justify-between p-5">
+                            <div>
+                                <span class="font-semibold text-gray-800">{{ $meta['label'] }}</span>
+                                <p class="text-xs text-gray-500">{{ $meta['tagline'] }}</p>
                             </div>
-                        </div>
-                        <div class="p-5 flex items-center justify-between">
-                            <span class="font-semibold text-gray-800">{{ $tpl[0] }}</span>
-                            <a href="{{ route('register') }}" class="text-sm font-semibold text-indigo-600 hover:underline">Use template →</a>
+                            <a href="{{ auth()->check() ? route('resumes.create', ['template' => $key]) : route('register') }}" class="text-sm font-semibold text-indigo-600 hover:underline">Use theme →</a>
                         </div>
                     </div>
                 @endforeach
@@ -180,9 +174,9 @@
     <section id="pricing" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div class="text-center max-w-2xl mx-auto">
             <h2 class="text-3xl lg:text-4xl font-extrabold text-gray-900">Simple, transparent pricing</h2>
-            <p class="mt-4 text-gray-600">Start free. Upgrade when you're ready. Cancel anytime.</p>
+            <p class="mt-4 text-gray-600">Affordable plans for every job seeker. Cancel anytime.</p>
         </div>
-        <div class="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($plans as $plan)
                 <div class="relative rounded-2xl bg-white border {{ $plan->is_featured ? 'border-indigo-500 ring-2 ring-indigo-200 shadow-lg' : 'border-gray-100 shadow-sm' }} p-6 flex flex-col">
                     @if ($plan->is_featured)
@@ -192,7 +186,7 @@
                     <p class="mt-1 text-sm text-gray-500 min-h-[2.5rem]">{{ $plan->description }}</p>
                     <div class="mt-4">
                         <span class="text-4xl font-extrabold text-gray-900">{{ $plan->priceLabel() }}</span>
-                        @unless ($plan->isFree())<span class="text-sm text-gray-500">{{ $plan->intervalLabel() }}</span>@endunless
+                        <span class="text-sm text-gray-500">{{ $plan->intervalLabel() }}</span>
                     </div>
                     <ul class="mt-5 space-y-2 text-sm text-gray-600 flex-1">
                         @foreach (($plan->features ?? []) as $feature)
@@ -204,7 +198,7 @@
                     </ul>
                     <a href="{{ route('register') }}"
                        class="mt-6 block text-center rounded-lg {{ $plan->is_featured ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white' }} px-4 py-2.5 text-sm font-semibold">
-                        {{ $plan->isFree() ? 'Start free' : 'Choose '.$plan->name }}
+                        Choose {{ $plan->name }}
                     </a>
                 </div>
             @endforeach
@@ -241,10 +235,10 @@
         <div class="mt-10 divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-white">
             @php
                 $faqs = [
-                    ['Is ResumeForge free?','Yes. The Free plan lets you build a resume and try things out. Upgrade for more resumes, unlimited downloads and no watermark.'],
+                    ['What plans are available?','We offer Starter, Pro, and Lifetime plans with flexible pricing. Choose the plan that fits your job search.'],
                     ['Are the resumes ATS-friendly?','All templates are designed to be parsed correctly by Applicant Tracking Systems, and the built-in checker helps you optimize further.'],
                     ['Can I download my resume as a PDF?','Absolutely. Export a clean, print-ready PDF any time (download limits depend on your plan).'],
-                    ['Can I cancel anytime?','Yes — you can cancel your subscription whenever you like and move back to the Free plan.'],
+                    ['Can I cancel anytime?','Yes — you can cancel your subscription whenever you like.'],
                 ];
             @endphp
             @foreach ($faqs as $faq)
@@ -263,9 +257,9 @@
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div class="rounded-3xl bg-gradient-to-r from-indigo-600 to-blue-600 px-8 py-14 text-center">
             <h2 class="text-3xl lg:text-4xl font-extrabold text-white">Your next job starts with a great resume</h2>
-            <p class="mt-4 text-indigo-100">Join thousands of job seekers building better resumes with ResumeForge.</p>
+            <p class="mt-4 text-indigo-100">Join thousands of job seekers building better resumes with AI Resume Builder.</p>
             <a href="{{ route('register') }}" class="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-indigo-700 hover:bg-indigo-50">
-                Get started — it's free
+                Get started today
             </a>
         </div>
     </section>
@@ -274,10 +268,10 @@
     <footer class="border-t border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
             <div class="flex items-center gap-2 font-extrabold text-indigo-600">
-                <span class="inline-flex h-6 w-6 items-center justify-center rounded bg-indigo-600 text-white text-xs">R</span>
-                ResumeForge
+                <span class="inline-flex h-6 w-6 items-center justify-center rounded bg-indigo-600 text-white text-xs">A</span>
+                AI Resume Builder
             </div>
-            <p>&copy; {{ date('Y') }} ResumeForge. Built with Laravel.</p>
+            <p>&copy; {{ date('Y') }} airesumebuilder.co.in — All rights reserved.</p>
             <div class="flex items-center gap-4">
                 <a href="#features" class="hover:text-indigo-600">Features</a>
                 <a href="#pricing" class="hover:text-indigo-600">Pricing</a>

@@ -19,19 +19,18 @@
     ];
 @endphp
 
-<div class="py-6" x-data="resumeForm(@js($init))">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+<div x-data="resumeForm(@js($init), @js($themeCatalog ?? \App\Support\ResumeThemes::catalog()), @js(route('resumes.ai.generate')))" @theme-selected="resume.template = $event.detail; themeOpen = false" class="space-y-5">
+        @include('partials.resume-completeness-header')
 
-        @if (session('status'))
-            <div class="mb-4 rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
-                {{ session('status') }}
-            </div>
-        @endif
+        @include('partials.alert')
+
+        <div x-show="aiError" x-cloak class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300" x-text="aiError"></div>
+        <div x-show="aiNotice" x-cloak class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300" x-text="aiNotice"></div>
 
         @if ($errors->any())
-            <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
                 <p class="font-semibold">Please fix the following:</p>
-                <ul class="list-disc ms-5 mt-1">
+                <ul class="mt-1 list-disc ps-5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -39,209 +38,348 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ $action }}" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <form method="POST" action="{{ $action }}" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
             @csrf
             @if ($method !== 'POST')
                 @method($method)
             @endif
 
             {{-- ============ LEFT: EDITOR ============ --}}
-            <div class="space-y-5">
+            <div class="min-w-0 space-y-5">
 
-                {{-- Meta + template --}}
-                <div class="bg-white rounded-xl shadow-sm p-5 space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Resume title (internal)</label>
-                        <input type="text" name="title" x-model="resume.title" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                {{-- Meta + theme --}}
+                <div class="resume-editor-section">
+                    <div class="resume-editor-section-head">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-slate-100">Resume details</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Internal title and visual theme</p>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Template</label>
-                        <select name="template" x-model="resume.template" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            @foreach ($templates as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
+                    <div class="resume-editor-section-body space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Resume title (internal)</label>
+                            <input type="text" name="title" x-model="resume.title" class="resume-input">
+                        </div>
+
+                        <div>
+                            <input type="hidden" name="template" x-model="resume.template">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Resume theme</label>
+                                <a href="{{ route('themes.index') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">Browse all {{ \App\Support\ResumeThemes::count() }} themes →</a>
+                            </div>
+
+                            <div x-show="!themeOpen" class="mt-3 flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700 dark:bg-slate-800/40 sm:flex-row sm:items-center">
+                                <div class="mx-auto w-28 shrink-0 rounded-xl p-2 sm:mx-0" :style="previewWrap(currentTheme())">
+                                    <div class="aspect-[3/4] rounded-lg bg-white p-2 shadow-sm" :class="currentTheme().font === 'serif' ? 'font-serif' : 'font-sans'">
+                                        <div :style="previewHeader(currentTheme())">
+                                            <div class="h-2 w-12 rounded" :style="{ background: currentTheme().layout === 'banner' ? '#fff' : (currentTheme().colors?.primary || '#4f46e5') }"></div>
+                                            <div class="mt-1 h-1.5 w-14 rounded opacity-70" :style="{ background: currentTheme().layout === 'banner' ? '#fff' : (currentTheme().colors?.light || '#eef2ff') }"></div>
+                                        </div>
+                                        <div class="mt-2 space-y-1">
+                                            <div class="h-1 w-full rounded" :style="{ background: currentTheme().colors?.light || '#eef2ff' }"></div>
+                                            <div class="h-1 w-10/12 rounded" :style="{ background: currentTheme().colors?.light || '#eef2ff' }"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="min-w-0 flex-1 text-center sm:text-left">
+                                    <p class="font-semibold text-slate-900 dark:text-slate-100" x-text="currentTheme().label || resume.template"></p>
+                                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                                        <span x-text="currentTheme().tagline"></span>
+                                        <span x-show="currentTheme().category"> · </span>
+                                        <span x-text="currentTheme().category"></span>
+                                    </p>
+                                </div>
+                                <button type="button" @click="themeOpen = true" class="admin-btn-secondary w-full sm:w-auto">Change theme</button>
+                            </div>
+
+                            <div x-show="themeOpen" x-cloak class="mt-3 space-y-3 rounded-xl border border-indigo-200 bg-indigo-50/30 p-4 dark:border-indigo-500/30 dark:bg-indigo-950/20">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Pick a theme</p>
+                                    <button type="button" @click="themeOpen = false" class="text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">Close</button>
+                                </div>
+                                @include('partials.theme-gallery', [
+                                    'mode' => 'select',
+                                    'selected' => old('template', $resume->template ?? 'modern'),
+                                    'themes' => \App\Support\ResumeThemes::all(),
+                                    'categories' => \App\Support\ResumeThemes::categories(),
+                                    'showFilters' => true,
+                                    'compact' => true,
+                                ])
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {{-- Contact --}}
-                <div class="bg-white rounded-xl shadow-sm p-5 space-y-4">
-                    <h3 class="font-semibold text-gray-800">Contact Details</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div id="section-contact" class="resume-editor-section scroll-mt-36 transition-shadow"
+                     :class="isNextSection('section-contact') ? 'ring-2 ring-indigo-400/60 ring-offset-2 dark:ring-indigo-500/50' : ''">
+                    <div class="resume-editor-section-head">
                         <div>
-                            <label class="block text-xs font-medium text-gray-600">Full name</label>
-                            <input type="text" name="full_name" x-model="resume.full_name" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                            <h3 class="font-semibold text-slate-900 dark:text-slate-100">Contact details</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">How employers can reach you</p>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600">Headline / Target role</label>
-                            <input type="text" name="headline" x-model="resume.headline" placeholder="Full Stack Developer" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600">Email</label>
-                            <input type="text" name="email" x-model="resume.email" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600">Phone</label>
-                            <input type="text" name="phone" x-model="resume.phone" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600">Location</label>
-                            <input type="text" name="location" x-model="resume.location" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600">LinkedIn</label>
-                            <input type="text" name="linkedin" x-model="resume.linkedin" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-xs font-medium text-gray-600">Website / Portfolio</label>
-                            <input type="text" name="website" x-model="resume.website" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                    </div>
+                    <div class="resume-editor-section-body">
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Full name</label>
+                                <input type="text" name="full_name" x-model="resume.full_name" class="resume-input">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Headline / Target role</label>
+                                <input type="text" name="headline" x-model="resume.headline" placeholder="Full Stack Developer" class="resume-input">
+                                <div class="mt-2">
+                                    @include('partials.ai-write-button', ['target' => 'headline', 'label' => 'AI Headline'])
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Email</label>
+                                <input type="text" name="email" x-model="resume.email" class="resume-input">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Phone</label>
+                                <input type="text" name="phone" x-model="resume.phone" class="resume-input">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Location</label>
+                                <input type="text" name="location" x-model="resume.location" class="resume-input">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">LinkedIn</label>
+                                <input type="text" name="linkedin" x-model="resume.linkedin" class="resume-input">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Website / Portfolio</label>
+                                <input type="text" name="website" x-model="resume.website" class="resume-input">
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Summary --}}
-                <div class="bg-white rounded-xl shadow-sm p-5 space-y-2">
-                    <h3 class="font-semibold text-gray-800">Professional Summary</h3>
-                    <textarea name="summary" x-model="resume.summary" rows="4" class="w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="Full Stack Developer with 5+ years..."></textarea>
-                    <p class="text-xs text-gray-400" x-text="wordCount(resume.summary) + ' words'"></p>
+                <div id="section-summary" class="resume-editor-section scroll-mt-36 transition-shadow"
+                     :class="isNextSection('section-summary') ? 'ring-2 ring-indigo-400/60 ring-offset-2 dark:ring-indigo-500/50' : ''">
+                    <div class="resume-editor-section-head">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-slate-100">Professional summary</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">A short overview of your experience</p>
+                        </div>
+                    </div>
+                    <div class="resume-editor-section-body">
+                        <textarea name="summary" x-model="resume.summary" rows="4" class="resume-input" placeholder="Full Stack Developer with 5+ years..."></textarea>
+                        <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+                            <p class="text-xs text-slate-400" x-text="wordCount(resume.summary) + ' words'"></p>
+                            @include('partials.ai-write-button', ['target' => 'summary'])
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Experience --}}
-                <div class="bg-white rounded-xl shadow-sm p-5 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-semibold text-gray-800">Work Experience</h3>
-                        <button type="button" @click="addExperience()" class="text-sm text-indigo-600 hover:underline">+ Add</button>
+                <div id="section-experience" class="resume-editor-section scroll-mt-36 transition-shadow"
+                     :class="isNextSection('section-experience') ? 'ring-2 ring-indigo-400/60 ring-offset-2 dark:ring-indigo-500/50' : ''">
+                    <div class="resume-editor-section-head">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-slate-100">Work experience</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Roles, companies, and achievements</p>
+                        </div>
+                        <button type="button" @click="addExperience()" class="text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">+ Add role</button>
                     </div>
-                    <template x-for="(item, i) in resume.experience" :key="'exp'+i">
-                        <div class="border rounded-lg p-3 space-y-2 bg-gray-50">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <input type="text" :name="`experience[${i}][role]`" x-model="item.role" placeholder="Role / Title" class="rounded-md border-gray-300 text-sm">
-                                <input type="text" :name="`experience[${i}][company]`" x-model="item.company" placeholder="Company" class="rounded-md border-gray-300 text-sm">
-                                <input type="text" :name="`experience[${i}][location]`" x-model="item.location" placeholder="Location" class="rounded-md border-gray-300 text-sm">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <input type="text" :name="`experience[${i}][start]`" x-model="item.start" placeholder="Start (Jan 2022)" class="rounded-md border-gray-300 text-sm">
-                                    <input type="text" :name="`experience[${i}][end]`" x-model="item.end" placeholder="End / Present" class="rounded-md border-gray-300 text-sm">
+                    <div class="resume-editor-section-body">
+                        <template x-for="(item, i) in resume.experience" :key="'exp'+i">
+                            <div class="resume-repeater-item">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-400" x-text="'Role ' + (i + 1)"></span>
+                                    <button type="button" @click="removeRow('experience', i)" class="text-xs font-medium text-red-500 hover:text-red-600">Remove</button>
+                                </div>
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <input type="text" :name="`experience[${i}][role]`" x-model="item.role" placeholder="Role / Title" class="resume-input mt-0">
+                                    <input type="text" :name="`experience[${i}][company]`" x-model="item.company" placeholder="Company" class="resume-input mt-0">
+                                    <input type="text" :name="`experience[${i}][location]`" x-model="item.location" placeholder="Location" class="resume-input mt-0">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="text" :name="`experience[${i}][start]`" x-model="item.start" placeholder="Start (Jan 2022)" class="resume-input mt-0">
+                                        <input type="text" :name="`experience[${i}][end]`" x-model="item.end" placeholder="End / Present" class="resume-input mt-0">
+                                    </div>
+                                </div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Achievements (one per line)</label>
+                                <textarea :name="`experience[${i}][bullets]`" x-model="item.bullets" rows="3" placeholder="One achievement per line" class="resume-input mt-0"></textarea>
+                                <div class="mt-2">
+                                    <button type="button"
+                                            @click="aiWrite('experience:' + i)"
+                                            :disabled="aiLoading !== null"
+                                            class="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20">
+                                        <span x-text="aiLoading === ('experience:' + i) ? 'Writing...' : 'AI Write'"></span>
+                                    </button>
                                 </div>
                             </div>
-                            <textarea :name="`experience[${i}][bullets]`" x-model="item.bullets" rows="3" placeholder="One achievement per line" class="w-full rounded-md border-gray-300 text-sm"></textarea>
-                            <div class="text-right">
-                                <button type="button" @click="removeRow('experience', i)" class="text-xs text-red-500 hover:underline">Remove</button>
-                            </div>
-                        </div>
-                    </template>
+                        </template>
+                        <p x-show="!resume.experience.length" class="text-center text-sm text-slate-400">No experience added yet.</p>
+                    </div>
                 </div>
 
                 {{-- Education --}}
-                <div class="bg-white rounded-xl shadow-sm p-5 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-semibold text-gray-800">Education</h3>
-                        <button type="button" @click="addEducation()" class="text-sm text-indigo-600 hover:underline">+ Add</button>
+                <div id="section-education" class="resume-editor-section scroll-mt-36 transition-shadow"
+                     :class="isNextSection('section-education') ? 'ring-2 ring-indigo-400/60 ring-offset-2 dark:ring-indigo-500/50' : ''">
+                    <div class="resume-editor-section-head">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-slate-100">Education</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Degrees and institutions</p>
+                        </div>
+                        <button type="button" @click="addEducation()" class="text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">+ Add degree</button>
                     </div>
-                    <template x-for="(item, i) in resume.education" :key="'edu'+i">
-                        <div class="border rounded-lg p-3 space-y-2 bg-gray-50">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <input type="text" :name="`education[${i}][degree]`" x-model="item.degree" placeholder="Degree (MCA)" class="rounded-md border-gray-300 text-sm">
-                                <input type="text" :name="`education[${i}][school]`" x-model="item.school" placeholder="School / University" class="rounded-md border-gray-300 text-sm">
-                                <input type="text" :name="`education[${i}][field]`" x-model="item.field" placeholder="Field of study" class="rounded-md border-gray-300 text-sm">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <input type="text" :name="`education[${i}][start]`" x-model="item.start" placeholder="Start" class="rounded-md border-gray-300 text-sm">
-                                    <input type="text" :name="`education[${i}][end]`" x-model="item.end" placeholder="End" class="rounded-md border-gray-300 text-sm">
+                    <div class="resume-editor-section-body">
+                        <template x-for="(item, i) in resume.education" :key="'edu'+i">
+                            <div class="resume-repeater-item">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-400" x-text="'Education ' + (i + 1)"></span>
+                                    <button type="button" @click="removeRow('education', i)" class="text-xs font-medium text-red-500 hover:text-red-600">Remove</button>
+                                </div>
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <input type="text" :name="`education[${i}][degree]`" x-model="item.degree" placeholder="Degree (MCA)" class="resume-input mt-0">
+                                    <input type="text" :name="`education[${i}][school]`" x-model="item.school" placeholder="School / University" class="resume-input mt-0">
+                                    <input type="text" :name="`education[${i}][field]`" x-model="item.field" placeholder="Field of study" class="resume-input mt-0">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="text" :name="`education[${i}][start]`" x-model="item.start" placeholder="Start" class="resume-input mt-0">
+                                        <input type="text" :name="`education[${i}][end]`" x-model="item.end" placeholder="End" class="resume-input mt-0">
+                                    </div>
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <button type="button" @click="removeRow('education', i)" class="text-xs text-red-500 hover:underline">Remove</button>
-                            </div>
-                        </div>
-                    </template>
+                        </template>
+                    </div>
                 </div>
 
                 {{-- Skills & Languages --}}
-                <div class="bg-white rounded-xl shadow-sm p-5 space-y-4">
-                    <div>
-                        <h3 class="font-semibold text-gray-800">Skills</h3>
-                        <p class="text-xs text-gray-500 mb-1">Comma or newline separated.</p>
-                        <textarea name="skills_raw" x-model="resume.skills_raw" rows="3" class="w-full rounded-md border-gray-300 text-sm" placeholder="PHP, Laravel, MySQL, React.js, REST APIs"></textarea>
+                <div id="section-skills" class="resume-editor-section scroll-mt-36 transition-shadow"
+                     :class="isNextSection('section-skills') ? 'ring-2 ring-indigo-400/60 ring-offset-2 dark:ring-indigo-500/50' : ''">
+                    <div class="resume-editor-section-head">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-slate-100">Skills & languages</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Comma or newline separated</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="font-semibold text-gray-800">Languages</h3>
-                        <input type="text" name="languages_raw" x-model="resume.languages_raw" class="mt-1 w-full rounded-md border-gray-300 text-sm" placeholder="English, Telugu">
+                    <div class="resume-editor-section-body space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Skills</label>
+                            <textarea name="skills_raw" x-model="resume.skills_raw" rows="3" class="resume-input" placeholder="PHP, Laravel, MySQL, React.js, REST APIs"></textarea>
+                            <div class="mt-2">
+                                @include('partials.ai-write-button', ['target' => 'skills'])
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 pt-4 dark:border-slate-800">
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Languages</label>
+                            <input type="text" name="languages_raw" x-model="resume.languages_raw" class="resume-input" placeholder="English, Telugu">
+                            <div class="mt-2">
+                                @include('partials.ai-write-button', ['target' => 'languages'])
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {{-- Projects --}}
-                <div class="bg-white rounded-xl shadow-sm p-5 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-semibold text-gray-800">Projects</h3>
-                        <button type="button" @click="addProject()" class="text-sm text-indigo-600 hover:underline">+ Add</button>
-                    </div>
-                    <template x-for="(item, i) in resume.projects" :key="'proj'+i">
-                        <div class="border rounded-lg p-3 space-y-2 bg-gray-50">
-                            <input type="text" :name="`projects[${i}][name]`" x-model="item.name" placeholder="Project name" class="w-full rounded-md border-gray-300 text-sm">
-                            <input type="text" :name="`projects[${i}][tech]`" x-model="item.tech" placeholder="Tech used (Laravel, MySQL)" class="w-full rounded-md border-gray-300 text-sm">
-                            <textarea :name="`projects[${i}][description]`" x-model="item.description" rows="2" placeholder="What it does / your role" class="w-full rounded-md border-gray-300 text-sm"></textarea>
-                            <div class="text-right">
-                                <button type="button" @click="removeRow('projects', i)" class="text-xs text-red-500 hover:underline">Remove</button>
-                            </div>
+                <div class="resume-editor-section">
+                    <div class="resume-editor-section-head">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-slate-100">Projects</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Portfolio and side projects</p>
                         </div>
-                    </template>
+                        <button type="button" @click="addProject()" class="text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">+ Add project</button>
+                    </div>
+                    <div class="resume-editor-section-body">
+                        <template x-for="(item, i) in resume.projects" :key="'proj'+i">
+                            <div class="resume-repeater-item">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-400" x-text="'Project ' + (i + 1)"></span>
+                                    <button type="button" @click="removeRow('projects', i)" class="text-xs font-medium text-red-500 hover:text-red-600">Remove</button>
+                                </div>
+                                <input type="text" :name="`projects[${i}][name]`" x-model="item.name" placeholder="Project name" class="resume-input mt-0">
+                                <input type="text" :name="`projects[${i}][tech]`" x-model="item.tech" placeholder="Tech used (Laravel, MySQL)" class="resume-input mt-0">
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Description</label>
+                                <textarea :name="`projects[${i}][description]`" x-model="item.description" rows="2" placeholder="What it does / your role" class="resume-input mt-0"></textarea>
+                                <div class="mt-2">
+                                    <button type="button"
+                                            @click="aiWrite('project:' + i)"
+                                            :disabled="aiLoading !== null"
+                                            class="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20">
+                                        <span x-text="aiLoading === ('project:' + i) ? 'Writing...' : 'AI Write'"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 {{-- Certifications --}}
-                <div class="bg-white rounded-xl shadow-sm p-5 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-semibold text-gray-800">Certifications</h3>
-                        <button type="button" @click="addCertification()" class="text-sm text-indigo-600 hover:underline">+ Add</button>
-                    </div>
-                    <template x-for="(item, i) in resume.certifications" :key="'cert'+i">
-                        <div class="border rounded-lg p-3 grid grid-cols-1 sm:grid-cols-3 gap-2 bg-gray-50">
-                            <input type="text" :name="`certifications[${i}][name]`" x-model="item.name" placeholder="Certification" class="rounded-md border-gray-300 text-sm">
-                            <input type="text" :name="`certifications[${i}][issuer]`" x-model="item.issuer" placeholder="Issuer" class="rounded-md border-gray-300 text-sm">
-                            <div class="flex gap-2">
-                                <input type="text" :name="`certifications[${i}][year]`" x-model="item.year" placeholder="Year" class="w-full rounded-md border-gray-300 text-sm">
-                                <button type="button" @click="removeRow('certifications', i)" class="text-xs text-red-500 hover:underline shrink-0">Remove</button>
-                            </div>
+                <div class="resume-editor-section">
+                    <div class="resume-editor-section-head">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-slate-100">Certifications</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Professional credentials</p>
                         </div>
-                    </template>
+                        <button type="button" @click="addCertification()" class="text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">+ Add cert</button>
+                    </div>
+                    <div class="resume-editor-section-body">
+                        <template x-for="(item, i) in resume.certifications" :key="'cert'+i">
+                            <div class="resume-repeater-item">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-400" x-text="'Certification ' + (i + 1)"></span>
+                                    <button type="button" @click="removeRow('certifications', i)" class="text-xs font-medium text-red-500 hover:text-red-600">Remove</button>
+                                </div>
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    <input type="text" :name="`certifications[${i}][name]`" x-model="item.name" placeholder="Certification" class="resume-input mt-0">
+                                    <input type="text" :name="`certifications[${i}][issuer]`" x-model="item.issuer" placeholder="Issuer" class="resume-input mt-0">
+                                    <input type="text" :name="`certifications[${i}][year]`" x-model="item.year" placeholder="Year" class="resume-input mt-0">
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-3 sticky bottom-4">
-                    <button type="submit" class="rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-500">Save Resume</button>
-                    <a href="{{ route('resumes.index') }}" class="text-sm text-gray-600 hover:underline">Cancel</a>
+                <div class="resume-save-bar sticky bottom-4 z-10 xl:static">
+                    <button type="submit" class="admin-btn-primary">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        Save Resume
+                    </button>
+                    <a href="{{ route('resumes.index') }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200">Cancel</a>
                 </div>
             </div>
 
-            {{-- ============ RIGHT: COMPLETENESS + PREVIEW ============ --}}
-            <div class="space-y-4 lg:sticky lg:top-6 lg:self-start">
-                @include('partials.resume-completeness-header')
+            {{-- ============ RIGHT: LIVE PREVIEW ============ --}}
+            <div class="xl:sticky xl:top-24 xl:self-start">
+                <div class="admin-card overflow-hidden">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800 sm:px-5">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Live preview</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Updates as you type</p>
+                        </div>
+                        <span class="admin-badge bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" x-text="themeLabel()"></span>
+                    </div>
+                    <div class="resume-preview-frame">
+                        <div class="resume-preview-paper text-xs leading-relaxed"
+                             :class="currentTheme().font === 'serif' ? 'font-serif' : 'font-sans'"
+                             :style="{ color: currentTheme().colors?.text || '#111827' }">
 
-                <div>
-                <div class="mb-2 flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-600">Live Preview</span>
-                    <span class="text-xs text-gray-400" x-text="resume.template + ' template'"></span>
-                </div>
-                <div class="bg-white rounded-xl shadow-lg border overflow-hidden">
-                    <div class="p-6 text-[11px] leading-relaxed text-gray-800 max-h-[80vh] overflow-y-auto"
-                         :class="resume.template === 'classic' ? 'font-serif' : 'font-sans'">
-
-                        {{-- Header --}}
-                        <div :class="resume.template === 'modern' ? 'border-l-4 border-indigo-600 pl-3' : (resume.template === 'classic' ? 'text-center border-b-2 border-gray-800 pb-2' : '')">
-                            <h1 class="text-lg font-bold text-gray-900" x-text="resume.full_name || 'Your Name'"></h1>
-                            <p class="text-indigo-600 font-medium" x-text="resume.headline"></p>
-                            <p class="text-gray-500 mt-1" x-text="contactLine()"></p>
+                        <div :style="themeHeaderStyle()">
+                            <h1 class="text-xl font-bold" :style="{ color: headerTextColor() }" x-text="resume.full_name || 'Your Name'"></h1>
+                            <p class="mt-0.5 text-sm font-medium" :style="{ color: headerAccentColor() }" x-text="resume.headline || 'Your headline'"></p>
+                            <p class="mt-1 text-[11px]" :style="{ color: headerMutedColor() }" x-text="contactLine() || 'email@example.com | phone | location'"></p>
                         </div>
 
-                        {{-- Summary --}}
                         <template x-if="resume.summary">
                             <div class="mt-4">
-                                <h2 class="uppercase tracking-wide font-bold text-gray-700 border-b mb-1" x-text="'Summary'"></h2>
+                                <h2 class="mb-1 border-b pb-1 text-xs font-bold uppercase tracking-wide" :style="sectionHeadingStyle()">Summary</h2>
                                 <p x-text="resume.summary" class="text-justify"></p>
+                            </div>
+                        </template>
+                        <template x-if="!resume.summary">
+                            <div class="mt-4">
+                                <h2 class="mb-1 border-b pb-1 text-xs font-bold uppercase tracking-wide" :style="sectionHeadingStyle()">Summary</h2>
+                                <p class="italic text-slate-400">Your summary will appear here…</p>
                             </div>
                         </template>
 
                         {{-- Experience --}}
                         <template x-if="hasContent(resume.experience, ['role','company'])">
                             <div class="mt-4">
-                                <h2 class="uppercase tracking-wide font-bold text-gray-700 border-b mb-1">Experience</h2>
+                                <h2 class="mb-1 border-b pb-1 text-xs font-bold uppercase tracking-wide" :style="sectionHeadingStyle()">Experience</h2>
                                 <template x-for="(item, i) in resume.experience" :key="'pexp'+i">
                                     <div class="mb-2" x-show="item.role || item.company">
                                         <div class="flex justify-between">
@@ -261,7 +399,7 @@
                         {{-- Education --}}
                         <template x-if="hasContent(resume.education, ['degree','school'])">
                             <div class="mt-4">
-                                <h2 class="uppercase tracking-wide font-bold text-gray-700 border-b mb-1">Education</h2>
+                                <h2 class="mb-1 border-b pb-1 text-xs font-bold uppercase tracking-wide" :style="sectionHeadingStyle()">Education</h2>
                                 <template x-for="(item, i) in resume.education" :key="'pedu'+i">
                                     <div class="mb-1 flex justify-between" x-show="item.degree || item.school">
                                         <span x-text="[item.degree, item.field, item.school].filter(Boolean).join(', ')"></span>
@@ -274,10 +412,10 @@
                         {{-- Skills --}}
                         <template x-if="listItems(resume.skills_raw).length">
                             <div class="mt-4">
-                                <h2 class="uppercase tracking-wide font-bold text-gray-700 border-b mb-1">Skills</h2>
+                                <h2 class="mb-1 border-b pb-1 text-xs font-bold uppercase tracking-wide" :style="sectionHeadingStyle()">Skills</h2>
                                 <div class="flex flex-wrap gap-1">
                                     <template x-for="(s, i) in listItems(resume.skills_raw)" :key="'sk'+i">
-                                        <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-700" x-text="s"></span>
+                                        <span class="rounded px-2 py-0.5 text-[10px]" :style="skillBadgeStyle()" x-text="s"></span>
                                     </template>
                                 </div>
                             </div>
@@ -286,7 +424,7 @@
                         {{-- Projects --}}
                         <template x-if="hasContent(resume.projects, ['name'])">
                             <div class="mt-4">
-                                <h2 class="uppercase tracking-wide font-bold text-gray-700 border-b mb-1">Projects</h2>
+                                <h2 class="mb-1 border-b pb-1 text-xs font-bold uppercase tracking-wide" :style="sectionHeadingStyle()">Projects</h2>
                                 <template x-for="(item, i) in resume.projects" :key="'ppr'+i">
                                     <div class="mb-1" x-show="item.name">
                                         <span class="font-semibold" x-text="item.name"></span>
@@ -300,7 +438,7 @@
                         {{-- Certifications --}}
                         <template x-if="hasContent(resume.certifications, ['name'])">
                             <div class="mt-4">
-                                <h2 class="uppercase tracking-wide font-bold text-gray-700 border-b mb-1">Certifications</h2>
+                                <h2 class="mb-1 border-b pb-1 text-xs font-bold uppercase tracking-wide" :style="sectionHeadingStyle()">Certifications</h2>
                                 <template x-for="(item, i) in resume.certifications" :key="'pce'+i">
                                     <div x-show="item.name" x-text="[item.name, item.issuer, item.year].filter(Boolean).join(' · ')"></div>
                                 </template>
@@ -310,76 +448,14 @@
                         {{-- Languages --}}
                         <template x-if="listItems(resume.languages_raw).length">
                             <div class="mt-4">
-                                <h2 class="uppercase tracking-wide font-bold text-gray-700 border-b mb-1">Languages</h2>
+                                <h2 class="mb-1 border-b pb-1 text-xs font-bold uppercase tracking-wide" :style="sectionHeadingStyle()">Languages</h2>
                                 <p x-text="listItems(resume.languages_raw).join(', ')"></p>
                             </div>
                         </template>
+                        </div>
                     </div>
-                </div>
                 </div>
             </div>
         </form>
-    </div>
 </div>
 
-<script>
-    function resumeForm(init) {
-        return {
-            resume: init,
-            wordCount(t) { return t ? t.trim().split(/\s+/).filter(Boolean).length : 0; },
-            lines(t) { return t ? t.split(/\n+/).map(s => s.trim()).filter(Boolean) : []; },
-            listItems(t) { return t ? t.split(/[,\n]+/).map(s => s.trim()).filter(Boolean) : []; },
-            contactLine() {
-                return [this.resume.email, this.resume.phone, this.resume.location, this.resume.linkedin, this.resume.website]
-                    .filter(Boolean).join('  |  ');
-            },
-            hasContent(arr, fields) {
-                return Array.isArray(arr) && arr.some(item => fields.some(f => item[f] && String(item[f]).trim()));
-            },
-            filled(value) {
-                return Boolean(value && String(value).trim());
-            },
-            completenessChecks() {
-                return [
-                    { label: 'Name', done: this.filled(this.resume.full_name) },
-                    { label: 'Email', done: this.filled(this.resume.email) },
-                    { label: 'Summary', done: this.filled(this.resume.summary) },
-                    { label: 'Experience', done: this.hasContent(this.resume.experience, ['role', 'company']) },
-                    { label: 'Education', done: this.hasContent(this.resume.education, ['degree', 'school']) },
-                    { label: 'Skills', done: this.listItems(this.resume.skills_raw).length > 0 },
-                ];
-            },
-            completenessPercent() {
-                const checks = this.completenessChecks();
-                const done = checks.filter((check) => check.done).length;
-                return Math.round((done / checks.length) * 100);
-            },
-            completenessLabel() {
-                const percent = this.completenessPercent();
-                if (percent >= 100) return 'Your resume is ready to save and download.';
-                if (percent >= 67) return 'Almost there — fill in the remaining sections.';
-                if (percent >= 34) return 'Good progress — keep going.';
-                return 'Just getting started — complete the key sections below.';
-            },
-            completenessBarClass() {
-                const percent = this.completenessPercent();
-                if (percent >= 100) return 'bg-gradient-to-r from-emerald-500 to-teal-500';
-                if (percent >= 67) return 'bg-gradient-to-r from-indigo-500 to-violet-500';
-                if (percent >= 34) return 'bg-gradient-to-r from-blue-500 to-cyan-500';
-                return 'bg-gradient-to-r from-amber-400 to-orange-500';
-            },
-            completenessTextClass() {
-                const percent = this.completenessPercent();
-                if (percent >= 100) return 'text-emerald-600';
-                if (percent >= 67) return 'text-indigo-600';
-                if (percent >= 34) return 'text-blue-600';
-                return 'text-amber-600';
-            },
-            addExperience() { this.resume.experience.push({ role: '', company: '', location: '', start: '', end: '', bullets: '' }); },
-            addEducation() { this.resume.education.push({ degree: '', school: '', field: '', start: '', end: '' }); },
-            addProject() { this.resume.projects.push({ name: '', tech: '', description: '' }); },
-            addCertification() { this.resume.certifications.push({ name: '', issuer: '', year: '' }); },
-            removeRow(section, i) { this.resume[section].splice(i, 1); },
-        };
-    }
-</script>

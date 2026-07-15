@@ -1,51 +1,51 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('ATS Checks') }}</h2>
-            <a href="{{ route('ats.create') }}" class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">+ New Check</a>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 sm:text-2xl">ATS Checks</h1>
+                <p class="text-sm text-slate-500">Optimize your resume for applicant tracking systems</p>
+            </div>
+            <a href="{{ route('ats.create') }}" class="admin-btn-primary">+ New Check</a>
         </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-4">
+    <div class="space-y-4">
+        @include('partials.alert')
 
-            @if (session('status'))
-                <div class="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
-                    {{ session('status') }}
-                </div>
-            @endif
+        @forelse ($checks as $check)
+            @php
+                $scoreClass = match($check->scoreColor()) {
+                    'green' => 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+                    'yellow', 'amber' => 'bg-amber-50 text-amber-700 ring-amber-100',
+                    'red' => 'bg-red-50 text-red-700 ring-red-100',
+                    default => 'bg-slate-100 text-slate-700 ring-slate-200',
+                };
+            @endphp
+            <div class="admin-card flex items-center justify-between gap-4 p-5">
+                <a href="{{ route('ats.show', $check) }}" class="flex min-w-0 flex-1 items-center gap-4 group">
+                    <span class="admin-badge shrink-0 ring-1 {{ $scoreClass }}">{{ $check->score }}%</span>
+                    <div class="min-w-0">
+                        <p class="truncate font-semibold text-slate-900 group-hover:text-indigo-600">{{ $check->job_title ?: 'Untitled role' }}</p>
+                        <p class="truncate text-xs text-slate-500">
+                            {{ $check->resume?->title ?? 'Resume deleted' }} · {{ $check->scoreLabel() }} · {{ $check->created_at->diffForHumans() }}
+                        </p>
+                    </div>
+                </a>
+                <form method="POST" action="{{ route('ats.destroy', $check) }}" onsubmit="return confirm('Delete this check?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-700">Delete</button>
+                </form>
+            </div>
+        @empty
+            <div class="admin-card p-12 text-center">
+                <p class="text-slate-500">No ATS checks yet.</p>
+                <a href="{{ route('ats.create') }}" class="admin-btn-primary mt-4 inline-flex">Run your first ATS check</a>
+            </div>
+        @endforelse
 
-            @forelse ($checks as $check)
-                <div class="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between gap-4">
-                    <a href="{{ route('ats.show', $check) }}" class="flex items-center gap-4 min-w-0 group">
-                        <span class="shrink-0 inline-flex items-center justify-center h-12 w-12 rounded-full text-sm font-bold text-{{ $check->scoreColor() }}-700 bg-{{ $check->scoreColor() }}-100">
-                            {{ $check->score }}
-                        </span>
-                        <div class="min-w-0">
-                            <p class="font-medium text-gray-800 group-hover:text-indigo-600 truncate">{{ $check->job_title ?: 'Untitled role' }}</p>
-                            <p class="text-xs text-gray-500 truncate">
-                                {{ $check->resume?->title ?? 'Resume deleted' }} &middot;
-                                {{ $check->scoreLabel() }} &middot;
-                                {{ $check->created_at->diffForHumans() }}
-                            </p>
-                        </div>
-                    </a>
-                    <form method="POST" action="{{ route('ats.destroy', $check) }}" onsubmit="return confirm('Delete this check?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-sm text-red-500 hover:underline">Delete</button>
-                    </form>
-                </div>
-            @empty
-                <div class="bg-white rounded-xl shadow-sm p-12 text-center">
-                    <p class="text-gray-500">No ATS checks yet.</p>
-                    <a href="{{ route('ats.create') }}" class="mt-4 inline-block rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Run your first ATS check</a>
-                </div>
-            @endforelse
-
-            @if ($checks->hasPages())
-                <div>{{ $checks->links() }}</div>
-            @endif
-        </div>
+        @if ($checks->hasPages())
+            <div>{{ $checks->links() }}</div>
+        @endif
     </div>
 </x-app-layout>

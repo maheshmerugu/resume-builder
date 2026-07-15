@@ -3,6 +3,8 @@ import forms from '@tailwindcss/forms';
 
 /** @type {import('tailwindcss').Config} */
 export default {
+    darkMode: 'class',
+
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
@@ -11,7 +13,7 @@ export default {
 
     safelist: [
         {
-            pattern: /(bg|text|border)-(indigo|blue|green|purple|red|yellow|gray|amber)-(50|100|200|300|400|500|600|700)/,
+            pattern: /(bg|text|border|ring)-(indigo|blue|green|purple|red|yellow|gray|amber|stone|slate|violet|teal|emerald|rose)-(50|100|200|300|400|500|600|700)/,
         },
     ],
 
