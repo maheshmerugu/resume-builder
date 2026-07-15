@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+    RewriteBase /resume-builder/
+
+    # Serve static assets from public/ (but never index.php itself)
+    RewriteCond %{DOCUMENT_ROOT}/resume-builder/public/$1 -f
+    RewriteCond $1 !^index\.php$
+    RewriteRule ^(.+)$ public/$1 [L]
+
+    # Everything else goes to root index.php (the proxy front controller)
+    RewriteRule ^ index.php [L]
+</IfModule>
