@@ -1,0 +1,25 @@
+---
+deployment:
+  tasks:
+    # Deploy Laravel into a subfolder (matches index.php / .htaccess base path).
+    # Update DEPLOYPATH if your site lives elsewhere on the server.
+    - export DEPLOYPATH=$HOME/public_html/resume-builder
+    - /bin/mkdir -p $DEPLOYPATH
+
+    # Copy application files to the live directory (never modify the git checkout).
+    - /usr/bin/rsync -a --delete --exclude=.git --exclude=node_modules --exclude=vendor --exclude=.env --exclude=storage/logs --exclude=storage/framework/cache --exclude=storage/framework/sessions --exclude=storage/framework/views ./ $DEPLOYPATH/
+
+    # Install PHP dependencies in the live directory only.
+    - cd $DEPLOYPATH && composer install --no-dev --optimize-autoloader --no-interaction
+
+    # Build frontend assets when Node.js is available (optional on shared hosting).
+    - cd $DEPLOYPATH && (npm ci --omit=dev && npm run build || echo "npm build skipped")
+
+    # Laravel optimizations (migrate is optional; remove "|| true" to fail on migration errors).
+    - cd $DEPLOYPATH && php artisan migrate --force --no-interaction || true
+    - cd $DEPLOYPATH && php artisan config:cache
+    - cd $DEPLOYPATH && php artisan route:cache
+    - cd $DEPLOYPATH && php artisan view:cache
+
+    # Writable directories for Laravel.
+    - /bin/chmod -R ug+rwx $DEPLOYPATH/storage $DEPLOYPATH/bootstrap/cache
