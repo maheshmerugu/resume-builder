@@ -20,6 +20,10 @@
 @endphp
 
 <div class="py-6" x-data="resumeForm(@js($init))">
+    <template x-teleport="#resume-progress-header">
+        @include('partials.resume-completeness-header')
+    </template>
+
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
         @if (session('status'))
@@ -331,6 +335,45 @@
             },
             hasContent(arr, fields) {
                 return Array.isArray(arr) && arr.some(item => fields.some(f => item[f] && String(item[f]).trim()));
+            },
+            filled(value) {
+                return Boolean(value && String(value).trim());
+            },
+            completenessChecks() {
+                return [
+                    { label: 'Name', done: this.filled(this.resume.full_name) },
+                    { label: 'Email', done: this.filled(this.resume.email) },
+                    { label: 'Summary', done: this.filled(this.resume.summary) },
+                    { label: 'Experience', done: this.hasContent(this.resume.experience, ['role', 'company']) },
+                    { label: 'Education', done: this.hasContent(this.resume.education, ['degree', 'school']) },
+                    { label: 'Skills', done: this.listItems(this.resume.skills_raw).length > 0 },
+                ];
+            },
+            completenessPercent() {
+                const checks = this.completenessChecks();
+                const done = checks.filter((check) => check.done).length;
+                return Math.round((done / checks.length) * 100);
+            },
+            completenessLabel() {
+                const percent = this.completenessPercent();
+                if (percent >= 100) return 'Your resume is ready to save and download.';
+                if (percent >= 67) return 'Almost there — fill in the remaining sections.';
+                if (percent >= 34) return 'Good progress — keep going.';
+                return 'Just getting started — complete the key sections below.';
+            },
+            completenessBarClass() {
+                const percent = this.completenessPercent();
+                if (percent >= 100) return 'bg-gradient-to-r from-emerald-500 to-teal-500';
+                if (percent >= 67) return 'bg-gradient-to-r from-indigo-500 to-violet-500';
+                if (percent >= 34) return 'bg-gradient-to-r from-blue-500 to-cyan-500';
+                return 'bg-gradient-to-r from-amber-400 to-orange-500';
+            },
+            completenessTextClass() {
+                const percent = this.completenessPercent();
+                if (percent >= 100) return 'text-emerald-600';
+                if (percent >= 67) return 'text-indigo-600';
+                if (percent >= 34) return 'text-blue-600';
+                return 'text-amber-600';
             },
             addExperience() { this.resume.experience.push({ role: '', company: '', location: '', start: '', end: '', bullets: '' }); },
             addEducation() { this.resume.education.push({ degree: '', school: '', field: '', start: '', end: '' }); },
