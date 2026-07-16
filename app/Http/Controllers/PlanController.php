@@ -7,9 +7,11 @@ use App\Models\Subscription;
 use App\Notifications\SubscriptionConfirmedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Razorpay\Api\Api;
 use Razorpay\Api\Errors\SignatureVerificationError;
+use Throwable;
 
 class PlanController extends Controller
 {
@@ -112,7 +114,15 @@ class PlanController extends Controller
             'razorpay_signature' => $request->razorpay_signature,
         ]);
 
-        $user->notify(new SubscriptionConfirmedNotification($plan));
+        try {
+            $user->notify(new SubscriptionConfirmedNotification($plan));
+        } catch (Throwable $e) {
+            Log::warning('Subscription confirmation email failed after payment.', [
+                'user_id' => $user->id,
+                'plan_id' => $plan->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return redirect()
             ->route('plans.index')
