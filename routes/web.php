@@ -4,12 +4,14 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminPlanController;
 use App\Http\Controllers\AtsCheckController;
 use App\Http\Controllers\Auth\AdminLoginController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResumeAiController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\ResumeFromJdController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +28,10 @@ Route::get('/', function () {
 
     return view('welcome', compact('plans', 'themeCount'));
 })->name('home');
+
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // Admin login (separate from user login)
 Route::middleware('guest')->prefix('admin')->name('admin.')->group(function () {

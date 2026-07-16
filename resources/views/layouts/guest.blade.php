@@ -6,6 +6,12 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'AI Resume Builder') }}</title>
+        @include('partials.seo-meta', ['seo' => $seo ?? [
+            'title' => config('app.name', 'AI Resume Builder'),
+            'description' => config('seo.default_description'),
+            'canonical' => url()->current(),
+            'noindex' => true,
+        ]])
         @include('partials.favicon')
 
         <link rel="preconnect" href="https://fonts.bunny.net">

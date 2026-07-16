@@ -3,17 +3,30 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'AI Resume Builder') }} — Create a resume from any job description</title>
-    <meta name="description" content="Paste any job description and get a tailored ATS resume in minutes. AI writing, {{ $themeCount }}+ templates, job-match scoring, and one-click PDF export.">
+    @php
+        $seo = [
+            'title' => config('app.name', 'AI Resume Builder').' — Create a resume from any job description',
+            'description' => 'Paste any job description and get a tailored ATS resume in minutes. AI writing, '.$themeCount.'+ templates, job-match scoring, and one-click PDF export.',
+            'canonical' => route('home', absolute: true),
+        ];
+        $schemas = [
+            \App\Support\Seo::organizationSchema(),
+            \App\Support\Seo::websiteSchema(),
+            \App\Support\Seo::softwareApplicationSchema(),
+        ];
+    @endphp
+    @include('partials.seo-meta')
     @include('partials.favicon')
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.seo-schema')
 </head>
 <body class="bg-white font-sans text-slate-900 antialiased" x-data="{ mobileOpen: false, faqOpen: null }">
 @php
     $jdCreateUrl = auth()->check() ? route('resumes.from-jd.create') : route('register');
     $jdCtaLabel = auth()->check() ? 'Create resume from JD' : 'Sign up — paste a JD free';
+    $blogPosts = \App\Support\Blog::published()->take(3);
 @endphp
 
     {{-- Nav --}}
@@ -30,6 +43,7 @@
                 <a href="#ats" class="transition hover:text-indigo-600">ATS Checker</a>
                 <a href="#templates" class="transition hover:text-indigo-600">Templates</a>
                 <a href="#pricing" class="transition hover:text-indigo-600">Pricing</a>
+                <a href="{{ route('blog.index') }}" class="transition hover:text-indigo-600">Blog</a>
             </nav>
             <div class="hidden items-center gap-3 md:flex">
                 @auth
@@ -49,6 +63,7 @@
                 @foreach ([['#from-jd','JD → Resume'],['#features','Features'],['#ai-writer','AI Writer'],['#ats','ATS Checker'],['#templates','Templates'],['#pricing','Pricing'],['#faq','FAQ']] as $link)
                     <a href="{{ $link[0] }}" @click="mobileOpen = false" class="rounded-lg px-3 py-2.5 hover:bg-slate-50">{{ $link[1] }}</a>
                 @endforeach
+                <a href="{{ route('blog.index') }}" @click="mobileOpen = false" class="rounded-lg px-3 py-2.5 hover:bg-slate-50">Blog</a>
             </nav>
             <div class="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4">
                 @auth
@@ -608,6 +623,33 @@
         </div>
     </section>
 
+    {{-- Blog --}}
+    @if ($blogPosts->isNotEmpty())
+    <section id="blog" class="border-t border-slate-200 bg-slate-50 py-20">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                    <span class="landing-section-label">Blog</span>
+                    <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 lg:text-4xl">Resume & career tips</h2>
+                    <p class="mt-3 max-w-xl text-slate-600">Guides to help you pass ATS screening and land more interviews.</p>
+                </div>
+                <a href="{{ route('blog.index') }}" class="landing-btn-secondary shrink-0">View all articles</a>
+            </div>
+            <div class="mt-10 grid gap-6 md:grid-cols-3">
+                @foreach ($blogPosts as $post)
+                    <a href="{{ route('blog.show', $post['slug']) }}" class="landing-card block p-6 transition hover:shadow-md">
+                        <time datetime="{{ $post['published_at'] }}" class="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                            {{ \Illuminate\Support\Carbon::parse($post['published_at'])->format('M j, Y') }}
+                        </time>
+                        <h3 class="mt-3 text-lg font-bold text-slate-900">{{ $post['title'] }}</h3>
+                        <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">{{ $post['description'] }}</p>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+
     {{-- Footer --}}
     <footer class="border-t border-slate-200 bg-slate-50">
         <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -629,6 +671,7 @@
                         <li><a href="#ats" class="hover:text-indigo-600">ATS Checker</a></li>
                         <li><a href="#templates" class="hover:text-indigo-600">Templates</a></li>
                         <li><a href="#pricing" class="hover:text-indigo-600">Pricing</a></li>
+                        <li><a href="{{ route('blog.index') }}" class="hover:text-indigo-600">Blog</a></li>
                     </ul>
                 </div>
                 <div>

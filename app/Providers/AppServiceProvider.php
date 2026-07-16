@@ -22,14 +22,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (! $origin = WebRoot::assetOrigin()) {
-            return;
+        if ($origin = WebRoot::assetOrigin()) {
+            URL::useAssetOrigin($origin);
+
+            Vite::createAssetPathsUsing(
+                fn (string $path) => $origin.'/'.ltrim($path, '/')
+            );
         }
 
-        URL::useAssetOrigin($origin);
-
-        Vite::createAssetPathsUsing(
-            fn (string $path) => $origin.'/'.ltrim($path, '/')
-        );
     }
 }

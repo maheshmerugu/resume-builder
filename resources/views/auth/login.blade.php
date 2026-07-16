@@ -46,8 +46,4 @@
         Don't have an account?
         <a href="{{ route('register') }}" class="font-semibold text-indigo-600 hover:text-indigo-500">Create one free</a>
     </p>
-
-    <p class="mt-3 text-center text-sm text-gray-400">
-        <a href="{{ route('admin.login') }}" class="font-medium text-gray-500 hover:text-gray-700">Admin login &rarr;</a>
-    </p>
 </x-guest-layout>

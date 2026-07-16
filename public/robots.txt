@@ -1,2 +1,8 @@
 User-agent: *
-Disallow:
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+
+Sitemap: https://airesumebuilder.co.in/sitemap.xml
