@@ -1,9 +1,8 @@
 ---
 deployment:
   tasks:
-    # Deploy Laravel into a subfolder (matches index.php / .htaccess base path).
-    # Update DEPLOYPATH if your site lives elsewhere on the server.
-    - export DEPLOYPATH=$HOME/public_html/resume-builder
+    # Live site docroot is public_html (domain root).
+    - export DEPLOYPATH=$HOME/public_html
     - /bin/mkdir -p $DEPLOYPATH
 
     # Copy application files to the live directory (never modify the git checkout).
@@ -14,12 +13,6 @@ deployment:
     - /bin/find $DEPLOYPATH -type f -exec chmod 644 {} \;
     - /bin/chmod 755 $DEPLOYPATH/index.php
 
-    # If domain root has no index, redirect / to /resume-builder/
-    - |
-      if [ ! -f "$HOME/public_html/index.php" ] && [ ! -f "$HOME/public_html/index.html" ]; then
-        /bin/cp "$DEPLOYPATH/deploy/public_html-index.php" "$HOME/public_html/index.php"
-        /bin/chmod 644 "$HOME/public_html/index.php"
-      fi
     - cd $DEPLOYPATH && composer install --no-dev --optimize-autoloader --no-interaction
 
     # Rebuild frontend when Node.js is available; pre-built assets in git are used if this fails.
