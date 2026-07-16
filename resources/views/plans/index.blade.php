@@ -43,7 +43,7 @@
         @endif
 
         <div id="plans" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            @foreach ($plans as $plan)
+            @forelse ($plans as $plan)
                 @php $isCurrent = $currentPlan && $currentPlan->id === $plan->id; @endphp
                 <div class="admin-card relative flex flex-col p-6 {{ $plan->is_featured ? 'ring-2 ring-indigo-200' : '' }}">
                     @if ($plan->is_featured)
@@ -78,7 +78,12 @@
                         @endif
                     </div>
                 </div>
-            @endforeach
+            @empty
+                <div class="col-span-full admin-card border-amber-200 bg-amber-50 p-8 text-center">
+                    <p class="font-semibold text-amber-900">No plans available yet</p>
+                    <p class="mt-2 text-sm text-amber-800">Subscription plans have not been configured. Please check back soon or contact support.</p>
+                </div>
+            @endforelse
         </div>
     </div>
 </x-app-layout>

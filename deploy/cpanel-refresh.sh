@@ -4,6 +4,7 @@ set -e
 cd "$HOME/public_html"
 
 php artisan migrate --force --no-interaction || true
+php artisan plans:sync --no-interaction || true
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear

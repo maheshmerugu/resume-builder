@@ -510,7 +510,7 @@
                 <p class="mt-4 text-slate-600">Less than a coffee a day for tools that can change your next offer.</p>
             </div>
             <div class="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                @foreach ($plans as $plan)
+                @forelse ($plans as $plan)
                     <div @class([
                         'relative flex flex-col rounded-2xl p-7 transition',
                         'border-2 border-indigo-600 bg-white shadow-xl shadow-indigo-600/10' => $plan->is_featured,
@@ -541,7 +541,13 @@
                             Get {{ $plan->name }}
                         </a>
                     </div>
-                @endforeach
+                @empty
+                    <div class="col-span-full rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
+                        <p class="text-sm font-semibold text-amber-900">Pricing plans are being set up.</p>
+                        <p class="mt-2 text-sm text-amber-800">Create a free account to explore the builder — paid plans will appear here shortly.</p>
+                        <a href="{{ route('register') }}" class="mt-5 inline-flex rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500">Get started free</a>
+                    </div>
+                @endforelse
             </div>
         </div>
     </section>

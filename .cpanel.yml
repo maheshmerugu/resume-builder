@@ -23,6 +23,7 @@ deployment:
 
     # Laravel optimizations (migrate is optional; remove "|| true" to fail on migration errors).
     - cd $DEPLOYPATH && php artisan migrate --force --no-interaction || true
+    - cd $DEPLOYPATH && php artisan plans:sync --no-interaction || true
     - cd $DEPLOYPATH && php artisan config:clear
     - cd $DEPLOYPATH && php artisan view:clear
     - cd $DEPLOYPATH && php artisan config:cache

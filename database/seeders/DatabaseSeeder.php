@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\AtsCheck;
-use App\Models\Plan;
 use App\Models\Resume;
 use App\Models\User;
 use App\Services\AtsScorer;
@@ -14,7 +13,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->seedPlans();
+        $this->call(PlanSeeder::class);
 
         $user = User::updateOrCreate(
             ['email' => 'demo@resumeforge.test'],
@@ -90,84 +89,4 @@ class DatabaseSeeder extends Seeder
         $this->command->info("Seeded demo user (demo@resumeforge.test / password) with ATS score: {$result['score']}");
     }
 
-    protected function seedPlans(): void
-    {
-        $plans = [
-            [
-                'name' => 'Starter',
-                'slug' => 'starter',
-                'description' => 'Perfect for an active job search.',
-                'price' => 150,
-                'interval' => 'monthly',
-                'resume_limit' => 3,
-                'download_limit' => null,
-                'edit_limit' => null,
-                'watermark' => false,
-                'features' => [
-                    '3 resumes',
-                    'Unlimited edits',
-                    'Unlimited PDF downloads',
-                    'No watermark',
-                    'All templates',
-                    'Unlimited ATS checks',
-                ],
-                'is_active' => true,
-                'is_featured' => true,
-                'is_default' => false,
-                'sort_order' => 1,
-            ],
-            [
-                'name' => 'Pro',
-                'slug' => 'pro',
-                'description' => 'For professionals managing many versions.',
-                'price' => 299,
-                'interval' => 'monthly',
-                'resume_limit' => 15,
-                'download_limit' => null,
-                'edit_limit' => null,
-                'watermark' => false,
-                'features' => [
-                    '15 resumes',
-                    'Unlimited edits & downloads',
-                    'No watermark',
-                    'All templates',
-                    'Priority ATS suggestions',
-                ],
-                'is_active' => true,
-                'is_featured' => false,
-                'is_default' => false,
-                'sort_order' => 2,
-            ],
-            [
-                'name' => 'Lifetime',
-                'slug' => 'lifetime',
-                'description' => 'Pay once, use forever.',
-                'price' => 1999,
-                'interval' => 'lifetime',
-                'resume_limit' => null,
-                'download_limit' => null,
-                'edit_limit' => null,
-                'watermark' => false,
-                'features' => [
-                    'Unlimited resumes',
-                    'Unlimited edits & downloads',
-                    'No watermark',
-                    'All templates',
-                    'One-time payment',
-                ],
-                'is_active' => true,
-                'is_featured' => false,
-                'is_default' => false,
-                'sort_order' => 3,
-            ],
-        ];
-
-        foreach ($plans as $plan) {
-            Plan::updateOrCreate(['slug' => $plan['slug']], $plan);
-        }
-
-        Plan::where('slug', 'free')->delete();
-
-        $this->command->info('Seeded ' . count($plans) . ' subscription plans.');
-    }
 }
