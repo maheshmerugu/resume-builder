@@ -9,6 +9,7 @@ use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResumeAiController;
 use App\Http\Controllers\ResumeController;
+use App\Http\Controllers\ResumeFromJdController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('themes', [ThemeController::class, 'index'])->name('themes.index');
 
     // Resume builder
+    Route::get('resumes/from-job/create', [ResumeFromJdController::class, 'create'])->name('resumes.from-jd.create');
+    Route::post('resumes/from-job', [ResumeFromJdController::class, 'store'])->name('resumes.from-jd.store');
     Route::post('resumes/ai/generate', [ResumeAiController::class, 'generate'])->name('resumes.ai.generate');
     Route::get('resumes/{resume}/pdf', [ResumeController::class, 'pdf'])->name('resumes.pdf');
     Route::post('resumes/{resume}/duplicate', [ResumeController::class, 'duplicate'])->name('resumes.duplicate');

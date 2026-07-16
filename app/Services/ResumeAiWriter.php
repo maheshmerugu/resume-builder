@@ -132,11 +132,13 @@ class ResumeAiWriter
         $response = $request->post($baseUrl, [
             'model' => $model,
             'temperature' => 0.7,
-            'max_tokens' => config('ai.max_tokens', 800),
+            'max_tokens' => $field === 'from_job_description' ? 2500 : config('ai.max_tokens', 800),
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are an expert resume writer for AI Resume Builder. Write concise, ATS-friendly, achievement-focused resume content. Use strong action verbs and measurable results where possible. Return only the requested content with no markdown, labels, or extra commentary.',
+                    'content' => $field === 'from_job_description'
+                        ? 'You are an expert resume writer. Create ATS-optimized resume content tailored to a specific job description. Return ONLY valid JSON with no markdown or commentary.'
+                        : 'You are an expert resume writer for AI Resume Builder. Write concise, ATS-friendly, achievement-focused resume content. Use strong action verbs and measurable results where possible. Return only the requested content with no markdown, labels, or extra commentary.',
                 ],
                 [
                     'role' => 'user',
@@ -183,6 +185,7 @@ class ResumeAiWriter
             'project_description' => $this->projectPrompt($context),
             'languages' => "Suggest spoken languages for a professional resume for someone in {$context['location']}. Return comma-separated language names only (e.g. English, Hindi).",
             'full_resume' => "Improve empty resume sections for {$name}. Headline: {$headline}. Return JSON with keys: headline, summary, skills_raw (comma string), and experience bullets as array of strings for first job only. Experience: {$experience}. Education: {$education}.",
+            'from_job_description' => $this->jobDescriptionPrompt($context),
             default => "Write professional resume content for field '{$field}' using context: headline={$headline}, experience={$experience}, projects={$projects}, summary={$summary}.",
         };
     }
@@ -217,7 +220,7 @@ class ResumeAiWriter
     {
         $content = trim(preg_replace('/^```[\w]*\n?|```$/m', '', $content) ?? $content);
 
-        if ($field === 'full_resume') {
+        if ($field === 'full_resume' || $field === 'from_job_description') {
             return $content;
         }
 
@@ -237,6 +240,7 @@ class ResumeAiWriter
             'project_description' => $this->localProjectDescription($context),
             'languages' => $this->localLanguages($context),
             'full_resume' => json_encode($this->localFullResume($context), JSON_UNESCAPED_UNICODE),
+            'from_job_description' => throw new \RuntimeException('Job description resume generation requires ResumeFromJobDescriptionGenerator.'),
             default => 'Professional content tailored to your experience and career goals.',
         };
     }
@@ -319,6 +323,42 @@ class ResumeAiWriter
     protected function localLanguages(array $context): string
     {
         return 'English, Hindi, Telugu';
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    protected function jobDescriptionPrompt(array $context): string
+    {
+        $name = $context['full_name'] ?? 'the candidate';
+        $jobTitle = $context['job_title'] ?? 'the role';
+        $jobDescription = Str::limit((string) ($context['job_description'] ?? ''), 6000, '');
+        $background = Str::limit((string) ($context['background_notes'] ?? ''), 1500, '');
+        $keywords = $context['jd_keywords'] ?? '';
+        $source = json_encode($context['source_resume'] ?? [], JSON_UNESCAPED_UNICODE);
+
+        return <<<PROMPT
+Create a complete tailored resume for {$name} targeting this job.
+
+Target job title: {$jobTitle}
+Key JD keywords to include naturally: {$keywords}
+Candidate background notes: {$background}
+Existing resume to adapt (optional): {$source}
+
+Job description:
+{$jobDescription}
+
+Return ONLY valid JSON with these keys:
+title, full_name, headline, email, phone, location, summary,
+skills (array of strings),
+experience (array of objects with role, company, location, start, end, bullets as newline string),
+education (array with degree, school, field, start, end),
+projects (array with name, tech, description),
+certifications (array with name, issuer, year),
+languages (array of strings)
+
+Use realistic but generic employer names if unknown. Bullets must include metrics and JD keywords. Keep content concise and ATS-friendly.
+PROMPT;
     }
 
     /**

@@ -38,6 +38,20 @@
             </div>
         @endif
 
+        <div class="admin-card overflow-hidden border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-violet-50 dark:border-indigo-900/50 dark:from-indigo-950/30 dark:via-slate-900 dark:to-violet-950/20">
+            <div class="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8">
+                <div class="max-w-xl">
+                    <span class="inline-flex rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">New</span>
+                    <h2 class="mt-3 text-xl font-extrabold text-slate-900 dark:text-slate-100 lg:text-2xl">Create a resume from any job description</h2>
+                    <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">Paste a job posting and get a tailored resume with matching keywords, summary, and bullet points — ready to edit and export.</p>
+                </div>
+                <a href="{{ route('resumes.from-jd.create') }}" class="admin-btn-primary shrink-0 self-start sm:self-center">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Generate from JD
+                </a>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <a href="{{ route('resumes.index') }}" class="admin-card group block overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md">
                 <div class="bg-gradient-to-br from-indigo-500 to-violet-600 p-5 text-white">

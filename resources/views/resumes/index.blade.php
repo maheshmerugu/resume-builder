@@ -67,7 +67,13 @@
         @empty
             <div class="admin-card p-12 text-center">
                 <p class="text-slate-500 dark:text-slate-400">You haven't created any resumes yet.</p>
-                <a href="{{ route('resumes.create') }}" class="admin-btn-primary mt-4 inline-flex">Create your first resume</a>
+                <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
+                    <a href="{{ route('resumes.from-jd.create') }}" class="admin-btn-primary inline-flex">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Create from job description
+                    </a>
+                    <a href="{{ route('resumes.create') }}" class="admin-btn-secondary inline-flex">Create manually</a>
+                </div>
             </div>
         @endforelse
     </div>

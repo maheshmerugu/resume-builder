@@ -3,14 +3,18 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'AI Resume Builder') }} — Land interviews with a recruiter-ready resume</title>
-    <meta name="description" content="Build an ATS-optimized resume in minutes. AI writing, {{ $themeCount }}+ templates, live preview, job-match scoring, and one-click PDF export.">
+    <title>{{ config('app.name', 'AI Resume Builder') }} — Create a resume from any job description</title>
+    <meta name="description" content="Paste any job description and get a tailored ATS resume in minutes. AI writing, {{ $themeCount }}+ templates, job-match scoring, and one-click PDF export.">
     @include('partials.favicon')
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-white font-sans text-slate-900 antialiased" x-data="{ mobileOpen: false, faqOpen: null }">
+@php
+    $jdCreateUrl = auth()->check() ? route('resumes.from-jd.create') : route('register');
+    $jdCtaLabel = auth()->check() ? 'Create resume from JD' : 'Sign up — paste a JD free';
+@endphp
 
     {{-- Nav --}}
     <header class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
@@ -20,6 +24,7 @@
                 <span class="text-lg font-bold tracking-tight text-slate-900">AI Resume Builder</span>
             </a>
             <nav class="hidden items-center gap-7 text-sm font-medium text-slate-600 lg:flex">
+                <a href="#from-jd" class="transition hover:text-indigo-600">JD → Resume</a>
                 <a href="#features" class="transition hover:text-indigo-600">Features</a>
                 <a href="#ai-writer" class="transition hover:text-indigo-600">AI Writer</a>
                 <a href="#ats" class="transition hover:text-indigo-600">ATS Checker</a>
@@ -41,7 +46,7 @@
         </div>
         <div x-show="mobileOpen" x-cloak x-transition class="border-t border-slate-100 bg-white px-4 py-4 lg:hidden">
             <nav class="flex flex-col gap-1 text-sm font-medium text-slate-700">
-                @foreach ([['#features','Features'],['#ai-writer','AI Writer'],['#ats','ATS Checker'],['#templates','Templates'],['#pricing','Pricing'],['#faq','FAQ']] as $link)
+                @foreach ([['#from-jd','JD → Resume'],['#features','Features'],['#ai-writer','AI Writer'],['#ats','ATS Checker'],['#templates','Templates'],['#pricing','Pricing'],['#faq','FAQ']] as $link)
                     <a href="{{ $link[0] }}" @click="mobileOpen = false" class="rounded-lg px-3 py-2.5 hover:bg-slate-50">{{ $link[1] }}</a>
                 @endforeach
             </nav>
@@ -62,28 +67,25 @@
         <div class="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:py-24">
             <div class="landing-fade-up max-w-xl lg:max-w-none">
                 <span class="landing-section-label">
-                    <span class="relative flex h-2 w-2">
-                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                    </span>
-                    Free to start · Built for Indian job seekers
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    New · Job description → full resume in seconds
                 </span>
                 <h1 class="mt-6 text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
-                    Build a resume that
-                    <span class="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent">gets you interviews</span>
+                    Paste a job description.
+                    <span class="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent">Get a tailored resume.</span>
                 </h1>
                 <p class="mt-5 text-lg leading-relaxed text-slate-600">
-                    Stop wrestling with Word. Create an ATS-ready resume in minutes with AI writing, live preview, job-match scoring, and {{ $themeCount }}+ professional themes.
+                    Copy any job posting — we extract keywords, write your summary & bullets, and build an ATS-ready resume you can edit and download as PDF. No blank-page stress.
                 </p>
                 <div class="mt-8 flex flex-wrap items-center gap-3">
-                    <a href="{{ route('register') }}" class="landing-btn-primary">
-                        Create my resume free
+                    <a href="{{ $jdCreateUrl }}" class="landing-btn-primary">
+                        {{ $jdCtaLabel }}
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                     </a>
-                    <a href="#ats" class="landing-btn-secondary">Try ATS checker</a>
+                    <a href="#from-jd" class="landing-btn-secondary">See how it works</a>
                 </div>
                 <ul class="mt-8 grid gap-3 sm:grid-cols-2">
-                    @foreach (['AI writes bullet points for you', 'Score resume vs any job description', 'One-click print-ready PDF', 'No credit card to start'] as $item)
+                    @foreach (['Paste any job description → get a full resume', 'AI writes bullet points for you', 'Score resume vs any job description', 'One-click print-ready PDF'] as $item)
                         <li class="landing-check-row">
                             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             {{ $item }}
@@ -92,22 +94,15 @@
                 </ul>
             </div>
 
-            {{-- Interactive-looking product mock --}}
+            {{-- JD → Resume hero visual --}}
             <div class="landing-fade-up landing-fade-up-delay-2 relative mx-auto w-full max-w-md lg:max-w-none">
-                <div class="landing-float absolute -left-3 top-10 z-20 hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xl lg:block">
-                    <div class="flex items-center gap-3">
-                        <div class="landing-score-ring flex h-12 w-12 items-center justify-center rounded-full">
-                            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-white text-xs font-extrabold text-emerald-600">92%</span>
-                        </div>
-                        <div>
-                            <p class="text-xs font-medium text-slate-500">ATS Match</p>
-                            <p class="text-sm font-bold text-slate-900">Strong fit</p>
-                        </div>
-                    </div>
+                <div class="landing-float absolute -left-3 top-8 z-20 hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xl lg:block">
+                    <p class="text-xs font-medium text-slate-500">Step 1</p>
+                    <p class="text-sm font-bold text-slate-900">Paste job description</p>
                 </div>
-                <div class="landing-float-delay absolute -right-2 bottom-20 z-20 hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xl lg:block">
-                    <p class="text-xs font-medium text-slate-500">AI suggestion</p>
-                    <p class="mt-0.5 max-w-[180px] text-xs font-semibold leading-snug text-slate-800">“Led a team of 8 and cut churn by 18%…”</p>
+                <div class="landing-float-delay absolute -right-2 bottom-16 z-20 hidden rounded-2xl border border-emerald-200 bg-white px-4 py-3 shadow-xl lg:block">
+                    <p class="text-xs font-medium text-emerald-600">Generated</p>
+                    <p class="text-sm font-bold text-slate-900">Tailored resume ready</p>
                 </div>
 
                 <div class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl shadow-slate-900/10 ring-1 ring-slate-900/5">
@@ -115,38 +110,33 @@
                         <span class="h-2.5 w-2.5 rounded-full bg-rose-400"></span>
                         <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
                         <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
-                        <span class="ml-2 text-xs font-medium text-slate-400">resume-preview.pdf</span>
+                        <span class="ml-2 text-xs font-medium text-slate-400">Create from Job Description</span>
                     </div>
-                    <div class="bg-gradient-to-br from-slate-50 to-white p-6 sm:p-8">
-                        <div class="flex items-start gap-4 border-b border-slate-100 pb-5">
-                            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-lg font-bold text-white">PS</div>
-                            <div>
-                                <p class="text-lg font-bold text-slate-900">Priya Sharma</p>
-                                <p class="text-sm font-medium text-indigo-600">Senior Product Manager</p>
-                                <p class="mt-1 text-xs text-slate-500">Bangalore · Available immediately</p>
-                            </div>
+                    <div class="space-y-4 bg-gradient-to-br from-slate-50 to-white p-5 sm:p-6">
+                        <div class="rounded-xl border border-slate-200 bg-white p-4">
+                            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Job description</p>
+                            <p class="mt-2 text-xs leading-relaxed text-slate-600">Senior Product Manager — 5+ years, roadmap ownership, stakeholder management, SQL, agile, B2B SaaS, OKRs...</p>
                         </div>
-                        <div class="mt-5">
-                            <p class="text-xs font-bold uppercase tracking-wider text-indigo-600">Summary</p>
-                            <p class="mt-2 text-xs leading-relaxed text-slate-600">Results-driven PM with 6+ years leading cross-functional teams. Increased retention 34% and shipped 12 product launches at scale.</p>
+                        <div class="flex justify-center">
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-4 py-1.5 text-xs font-bold text-white">
+                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                AI generates resume
+                            </span>
                         </div>
-                        <div class="mt-5">
-                            <p class="text-xs font-bold uppercase tracking-wider text-indigo-600">Experience</p>
-                            <div class="mt-2">
-                                <div class="flex items-center justify-between gap-2">
-                                    <p class="text-xs font-semibold text-slate-800">Lead Product Manager · TechCorp</p>
-                                    <p class="text-[10px] text-slate-400">2021 — Present</p>
+                        <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Priya Sharma</p>
+                                    <p class="text-xs font-semibold text-indigo-600">Senior Product Manager</p>
                                 </div>
-                                <ul class="mt-1.5 space-y-1 text-[10px] text-slate-600">
-                                    <li>• Led roadmap for B2B SaaS platform serving 50K+ users</li>
-                                    <li>• Reduced churn by 18% through data-driven prioritization</li>
-                                </ul>
+                                <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">92% ATS</span>
                             </div>
-                        </div>
-                        <div class="mt-5 flex flex-wrap gap-1.5">
-                            @foreach (['Product Strategy', 'Agile', 'SQL', 'Leadership', 'Roadmapping'] as $skill)
-                                <span class="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">{{ $skill }}</span>
-                            @endforeach
+                            <p class="mt-2 text-[11px] leading-relaxed text-slate-600">Results-driven PM with 6+ years leading cross-functional teams. Skilled in OKRs, SQL, agile delivery...</p>
+                            <div class="mt-3 flex flex-wrap gap-1">
+                                @foreach (['OKRs', 'SQL', 'Agile', 'Roadmapping', 'B2B SaaS'] as $kw)
+                                    <span class="rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 ring-1 ring-indigo-100">{{ $kw }}</span>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -157,8 +147,8 @@
     {{-- Trust bar --}}
     <section class="border-y border-slate-100 bg-slate-50/80">
         <div class="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 gap-6 text-center md:grid-cols-4">
-                @foreach ([[$themeCount . '+', 'Pro themes'], ['1M+', 'Resumes built'], ['92%', 'Avg ATS score'], ['4.8★', 'User rating']] as $stat)
+            <div class="grid grid-cols-2 gap-6 text-center md:grid-cols-5">
+                @foreach ([['JD → Resume', 'Auto-generate'], [$themeCount . '+', 'Pro themes'], ['1M+', 'Resumes built'], ['92%', 'Avg ATS score'], ['4.8★', 'User rating']] as $stat)
                     <div>
                         <p class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{{ $stat[0] }}</p>
                         <p class="mt-1 text-sm font-medium text-slate-500">{{ $stat[1] }}</p>
@@ -180,7 +170,7 @@
                 <div class="rounded-2xl border border-rose-100 bg-rose-50/50 p-7">
                     <p class="text-xs font-bold uppercase tracking-wider text-rose-600">Without AI Resume Builder</p>
                     <ul class="mt-5 space-y-3">
-                        @foreach (['Hours fixing margins and fonts in Word', 'No idea if ATS will parse your file', 'Generic bullets that sound like everyone else', 'One resume for every job = low response rate'] as $item)
+                        @foreach (['Manually rewriting resume for every job posting', 'Missing keywords the ATS is scanning for', 'Generic bullets that sound like everyone else', 'Hours in Word with no match score feedback'] as $item)
                             <li class="flex gap-3 text-sm text-slate-700">
                                 <svg class="mt-0.5 h-5 w-5 shrink-0 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                 {{ $item }}
@@ -191,7 +181,7 @@
                 <div class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-7 shadow-sm">
                     <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">With AI Resume Builder</p>
                     <ul class="mt-5 space-y-3">
-                        @foreach (['Templates that look polished in minutes', 'Instant ATS score against any job post', 'AI rewrites bullets with impact & metrics', 'Multiple versions tailored for each role'] as $item)
+                        @foreach (['Paste JD → get a full tailored resume', 'Keywords extracted and woven into content', 'AI writes summary, skills & bullet points', 'Instant ATS match score after generation'] as $item)
                             <li class="landing-check-row">
                                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                 {{ $item }}
@@ -208,14 +198,14 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mx-auto max-w-2xl text-center">
                 <span class="landing-section-label">How it works</span>
-                <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 lg:text-4xl">Interview-ready in 4 simple steps</h2>
+                <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 lg:text-4xl">From job description to PDF in 4 steps</h2>
             </div>
             <div class="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach ([
-                    ['01', 'Choose a theme', 'Pick from '.$themeCount.'+ ATS-friendly layouts for tech, business, design & more.'],
-                    ['02', 'Add your story', 'Guided sections for contact, summary, experience, education & skills.'],
-                    ['03', 'Optimize with AI', 'Generate stronger bullets and run an ATS check against the job you want.'],
-                    ['04', 'Export & apply', 'Download a crisp PDF and send applications with confidence.'],
+                    ['01', 'Paste the JD', 'Copy the full job posting — title, requirements, responsibilities & skills.'],
+                    ['02', 'Add your background', 'Name, experience level, and optional notes about your career.'],
+                    ['03', 'AI builds your resume', 'We generate headline, summary, skills & bullets matched to the JD.'],
+                    ['04', 'Edit & download PDF', 'Personalize in the editor, check ATS score, export and apply.'],
                 ] as $step)
                     <div class="landing-card p-6">
                         <span class="text-3xl font-extrabold text-indigo-100">{{ $step[0] }}</span>
@@ -224,8 +214,9 @@
                     </div>
                 @endforeach
             </div>
-            <div class="mt-10 text-center">
-                <a href="{{ route('register') }}" class="landing-btn-primary">Start building now</a>
+            <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+                <a href="{{ $jdCreateUrl }}" class="landing-btn-primary">{{ $jdCtaLabel }}</a>
+                <a href="{{ route('register') }}" class="landing-btn-secondary">Or create manually</a>
             </div>
         </div>
     </section>
@@ -241,6 +232,7 @@
             <div class="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 @php
                     $features = [
+                        ['M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', 'Auto Resume from Job Description', 'Paste a job posting and instantly generate a tailored resume with matching keywords, summary, and experience bullets.'],
                         ['M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', 'ATS Resume Checker', 'Paste a job description and get a match score plus missing keywords to beat bots.'],
                         ['M13 10V3L4 14h7v7l9-11h-7z', 'AI Writing Assistant', 'Turn rough notes into polished summaries and achievement-focused bullet points.'],
                         ['M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z', 'Live Preview Builder', 'See every edit instantly. What you see is exactly what recruiters download.'],
@@ -306,6 +298,52 @@
                         <p class="mt-2 text-sm font-medium text-slate-800">Led a cross-functional team of 8 to ship 12 product features, lifting user retention by 34% in two quarters.</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- JD → Resume spotlight --}}
+    <section id="from-jd" class="border-y border-slate-100 bg-slate-900 py-20">
+        <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+            <div class="order-2 lg:order-1">
+                <div class="landing-card overflow-hidden border-slate-700 bg-slate-800/50 p-0 shadow-2xl">
+                    <div class="border-b border-slate-700 bg-slate-800 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Job description in → Resume out</div>
+                    <div class="space-y-4 p-5">
+                        <div class="rounded-xl border border-slate-600 bg-slate-900/80 p-4">
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Input</p>
+                            <p class="mt-2 text-sm text-slate-300">Senior PHP Developer — Laravel, MySQL, REST APIs, 4+ years, agile team, build scalable backend services...</p>
+                        </div>
+                        <div class="flex justify-center">
+                            <span class="rounded-full bg-indigo-500 px-4 py-1.5 text-xs font-bold text-white">Auto-generate →</span>
+                        </div>
+                        <div class="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-4">
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-400">Generated resume</p>
+                            <p class="mt-2 text-sm font-semibold text-white">Senior PHP Developer</p>
+                            <p class="mt-1 text-xs text-slate-400">Summary + skills + bullets matched to JD keywords</p>
+                            <div class="mt-3 flex flex-wrap gap-1.5">
+                                @foreach (['Laravel', 'PHP', 'MySQL', 'REST APIs', 'Agile'] as $kw)
+                                    <span class="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-300">{{ $kw }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="order-1 text-white lg:order-2">
+                <span class="inline-flex rounded-full border border-slate-700 bg-slate-800 px-3.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300">Flagship feature</span>
+                <h2 class="mt-4 text-3xl font-extrabold tracking-tight lg:text-4xl">One-click resume from any job posting</h2>
+                <p class="mt-4 text-slate-400">Copy a job description, add your background, and get a complete tailored resume in seconds — not hours.</p>
+                <ul class="mt-8 space-y-3">
+                    @foreach (['Extracts keywords from the JD automatically', 'Writes headline, summary, skills & bullets', 'Opens in the editor ready to personalize', 'Shows estimated ATS match score'] as $item)
+                        <li class="flex gap-2.5 text-sm text-slate-300">
+                            <svg class="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            {{ $item }}
+                        </li>
+                    @endforeach
+                </ul>
+                <a href="{{ $jdCreateUrl }}" class="landing-btn-primary mt-8 !bg-white !text-indigo-700 hover:!bg-indigo-50">
+                    {{ $jdCtaLabel }}
+                </a>
             </div>
         </div>
     </section>
@@ -526,6 +564,7 @@
             <div class="mt-10 space-y-3">
                 @php
                     $faqs = [
+                        ['Can I create a resume from a job description?', 'Yes — paste any job posting on our JD → Resume page. AI extracts keywords and generates a tailored resume with headline, summary, skills, and experience bullets. You can edit everything before downloading.'],
                         ['Is it free to start?', 'Yes. Create an account and build your resume without a credit card. Upgrade when you need more downloads, themes, or AI credits.'],
                         ['Will my resume pass ATS systems?', 'Yes. Templates are designed for clean parsing, and the ATS checker scores your resume against any job description with keyword tips.'],
                         ['Can AI write my entire resume?', 'AI helps with summaries and bullet points from your inputs. You stay in control — edit anything before exporting.'],
@@ -554,14 +593,14 @@
             <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 px-8 py-16 text-center shadow-2xl shadow-indigo-600/30 sm:px-16">
                 <div class="landing-grid-pattern pointer-events-none absolute inset-0 opacity-20"></div>
                 <div class="relative">
-                    <h2 class="text-3xl font-extrabold tracking-tight text-white lg:text-4xl">Your next interview starts with a better resume</h2>
-                    <p class="mx-auto mt-4 max-w-xl text-lg text-indigo-100">Join thousands of professionals building ATS-ready resumes with AI — free to start, ready in minutes.</p>
+                    <h2 class="text-3xl font-extrabold tracking-tight text-white lg:text-4xl">Got a job posting? Turn it into a resume now.</h2>
+                    <p class="mx-auto mt-4 max-w-xl text-lg text-indigo-100">Paste the JD, get a tailored resume in seconds — then edit, score against ATS, and download PDF.</p>
                     <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-                        <a href="{{ route('register') }}" class="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-indigo-700 shadow-lg transition hover:bg-indigo-50">
-                            Create my resume free
+                        <a href="{{ $jdCreateUrl }}" class="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-indigo-700 shadow-lg transition hover:bg-indigo-50">
+                            {{ $jdCtaLabel }}
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                         </a>
-                        <a href="#pricing" class="inline-flex items-center gap-2 rounded-xl border border-white/30 px-8 py-3.5 text-base font-semibold text-white transition hover:bg-white/10">View pricing</a>
+                        <a href="{{ route('register') }}" class="inline-flex items-center gap-2 rounded-xl border border-white/30 px-8 py-3.5 text-base font-semibold text-white transition hover:bg-white/10">Create manually</a>
                     </div>
                     <p class="mt-6 text-sm text-indigo-200">Free to start · No credit card · Cancel anytime</p>
                 </div>
@@ -583,7 +622,9 @@
                 <div>
                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Product</p>
                     <ul class="mt-4 space-y-2.5 text-sm text-slate-600">
+                        <li><a href="{{ $jdCreateUrl }}" class="font-semibold text-indigo-600 hover:text-indigo-500">Create from job description</a></li>
                         <li><a href="#features" class="hover:text-indigo-600">Features</a></li>
+                        <li><a href="#from-jd" class="hover:text-indigo-600">JD → Resume</a></li>
                         <li><a href="#ai-writer" class="hover:text-indigo-600">AI Writer</a></li>
                         <li><a href="#ats" class="hover:text-indigo-600">ATS Checker</a></li>
                         <li><a href="#templates" class="hover:text-indigo-600">Templates</a></li>
