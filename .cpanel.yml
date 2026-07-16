@@ -9,7 +9,17 @@ deployment:
     # Copy application files to the live directory (never modify the git checkout).
     - /usr/bin/rsync -a --delete --exclude=.git --exclude=node_modules --exclude=vendor --exclude=.env --exclude=storage/logs --exclude=storage/framework/cache --exclude=storage/framework/sessions --exclude=storage/framework/views ./ $DEPLOYPATH/
 
-    # Install PHP dependencies in the live directory only.
+    # File permissions (403 on cPanel is often caused by overly strict modes).
+    - /bin/find $DEPLOYPATH -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH -type f -exec chmod 644 {} \;
+    - /bin/chmod 755 $DEPLOYPATH/index.php
+
+    # If domain root has no index, redirect / to /resume-builder/
+    - |
+      if [ ! -f "$HOME/public_html/index.php" ] && [ ! -f "$HOME/public_html/index.html" ]; then
+        /bin/cp "$DEPLOYPATH/deploy/public_html-index.php" "$HOME/public_html/index.php"
+        /bin/chmod 644 "$HOME/public_html/index.php"
+      fi
     - cd $DEPLOYPATH && composer install --no-dev --optimize-autoloader --no-interaction
 
     # Build frontend assets when Node.js is available (optional on shared hosting).

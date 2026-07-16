@@ -1,16 +1,29 @@
+DirectoryIndex index.php
+
 <IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
-
+    Options +FollowSymLinks -MultiViews -Indexes
     RewriteEngine On
-    RewriteBase /resume-builder/
 
-    # Serve static assets from public/ (but never index.php itself)
-    RewriteCond %{DOCUMENT_ROOT}/resume-builder/public/$1 -f
-    RewriteCond $1 !^index\.php$
+    # Serve static assets from public/ (paths relative to this folder on cPanel/Apache).
+    RewriteCond %{REQUEST_URI} !index\.php$ [NC]
+    RewriteCond public/$1 -f
     RewriteRule ^(.+)$ public/$1 [L]
 
-    # Everything else goes to root index.php (the proxy front controller)
+    # Laravel front controller.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_authz_core.c>
+    <Files "index.php">
+        Require all granted
+    </Files>
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    <Files "index.php">
+        Order allow,deny
+        Allow from all
+    </Files>
 </IfModule>

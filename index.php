@@ -1,15 +1,21 @@
 <?php
 
 /**
- * Proxy front controller for running Laravel in a XAMPP subfolder.
+ * Front controller proxy for Laravel in a subfolder (cPanel / XAMPP).
  *
- * Keeps REQUEST_URI intact and sets SCRIPT_NAME so that Laravel's Symfony
- * Request component derives the correct base path (/resume-builder).
- * This way route matching AND URL generation both work automatically.
+ * Auto-detects the URL base path from SCRIPT_NAME so the same code works at
+ * /resume-builder/ or at the domain root when the docroot points here.
  */
 
-$_SERVER['SCRIPT_NAME']     = '/resume-builder/index.php';
-$_SERVER['PHP_SELF']        = '/resume-builder/index.php';
-$_SERVER['SCRIPT_FILENAME'] = __DIR__ . '/public/index.php';
+$basePath = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/index.php')), '/');
+if ($basePath === '/' || $basePath === '.') {
+    $basePath = '';
+}
 
-require __DIR__ . '/public/index.php';
+$scriptName = ($basePath === '' ? '' : $basePath).'/index.php';
+
+$_SERVER['SCRIPT_NAME']     = $scriptName;
+$_SERVER['PHP_SELF']        = $scriptName;
+$_SERVER['SCRIPT_FILENAME'] = __DIR__.'/public/index.php';
+
+require __DIR__.'/public/index.php';
