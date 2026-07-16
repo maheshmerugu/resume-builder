@@ -7,9 +7,7 @@
     <meta name="description" content="Create a professional, ATS-friendly resume in minutes. Beautiful templates, a built-in ATS checker, and one-click PDF export.">
     @include('partials.favicon')
 
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-white text-gray-900 antialiased">
 

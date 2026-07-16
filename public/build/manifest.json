@@ -1,0 +1,19 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-DqaRuM1I.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/admin-dashboard.js": {
+    "file": "assets/admin-dashboard-DMuX4P0G.js",
+    "name": "admin-dashboard",
+    "src": "resources/js/admin-dashboard.js",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-17t4Dans.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  }
+}

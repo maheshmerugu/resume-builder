@@ -4,12 +4,10 @@ DirectoryIndex index.php
     Options +FollowSymLinks -MultiViews -Indexes
     RewriteEngine On
 
-    # Serve static assets from public/ (paths relative to this folder on cPanel/Apache).
-    RewriteCond %{REQUEST_URI} !index\.php$ [NC]
-    RewriteCond public/$1 -f
-    RewriteRule ^(.+)$ public/$1 [L]
+    # Serve compiled Vite assets, favicon, and other public/ files.
+    RewriteRule ^(build/.+|favicon\.svg|robots\.txt|storage/.+)$ public/$1 [L]
 
-    # Laravel front controller.
+    # Laravel front controller (root index.php sets correct base path for subfolders).
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.php [L]

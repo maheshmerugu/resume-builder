@@ -14,6 +14,9 @@ if ($basePath === '/' || $basePath === '.') {
 
 $scriptName = ($basePath === '' ? '' : $basePath).'/index.php';
 
+// Docroot is the project root — static files are served from /public/…
+define('LARAVEL_WEB_PUBLIC_PREFIX', '/public');
+
 $_SERVER['SCRIPT_NAME']     = $scriptName;
 $_SERVER['PHP_SELF']        = $scriptName;
 $_SERVER['SCRIPT_FILENAME'] = __DIR__.'/public/index.php';
