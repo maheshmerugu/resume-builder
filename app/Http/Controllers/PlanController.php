@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Notifications\SubscriptionConfirmedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -110,6 +111,8 @@ class PlanController extends Controller
             'razorpay_payment_id' => $request->razorpay_payment_id,
             'razorpay_signature' => $request->razorpay_signature,
         ]);
+
+        $user->notify(new SubscriptionConfirmedNotification($plan));
 
         return redirect()
             ->route('plans.index')

@@ -3,8 +3,10 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Notifications\PasswordChangedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class PasswordUpdateTest extends TestCase
@@ -13,6 +15,8 @@ class PasswordUpdateTest extends TestCase
 
     public function test_password_can_be_updated(): void
     {
+        Notification::fake();
+
         $user = User::factory()->create();
 
         $response = $this
@@ -29,6 +33,8 @@ class PasswordUpdateTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
+
+        Notification::assertSentTo($user, PasswordChangedNotification::class);
     }
 
     public function test_correct_password_must_be_provided_to_update_password(): void
