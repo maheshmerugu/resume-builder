@@ -34,3 +34,11 @@
 @if ($handle = config('seo.twitter_handle'))
     <meta name="twitter:site" content="{{ $handle }}">
 @endif
+@if ($googleVerification = config('seo.google_site_verification'))
+    <meta name="google-site-verification" content="{{ $googleVerification }}">
+@endif
+@if ($bingVerification = config('seo.bing_site_verification'))
+    <meta name="msvalidate.01" content="{{ $bingVerification }}">
+@endif
+<meta name="application-name" content="{{ config('seo.site_name') }}">
+<meta name="author" content="{{ config('seo.site_name') }}">

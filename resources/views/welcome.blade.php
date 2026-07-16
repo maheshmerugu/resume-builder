@@ -4,15 +4,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php
+        $homepageFaqs = [
+            ['Can I create a resume from a job description?', 'Yes — paste any job posting on our JD → Resume page. AI extracts keywords and generates a tailored resume with headline, summary, skills, and experience bullets. You can edit everything before downloading.'],
+            ['Is AI Resume Builder free to start?', 'Yes. Create an account at airesumebuilder.co.in and build your resume without a credit card. Upgrade when you need more downloads, themes, or AI credits.'],
+            ['Will my resume pass ATS systems?', 'Yes. Templates are designed for clean parsing, and the ATS checker scores your resume against any job description with keyword tips.'],
+            ['Can AI write my entire resume?', 'AI helps with summaries and bullet points from your inputs. You stay in control — edit anything before exporting.'],
+            ['Can I make multiple versions?', 'Absolutely. Create tailored resumes for each role and keep them organized in your dashboard.'],
+            ['Can I cancel anytime?', 'Yes. Cancel from account settings whenever you like — no long-term contracts.'],
+        ];
         $seo = [
-            'title' => config('app.name', 'AI Resume Builder').' — Create a resume from any job description',
-            'description' => 'Paste any job description and get a tailored ATS resume in minutes. AI writing, '.$themeCount.'+ templates, job-match scoring, and one-click PDF export.',
+            'title' => config('seo.default_title'),
+            'description' => 'AI Resume Builder (airesumebuilder.co.in) — paste any job description and get a tailored ATS resume in minutes. AI writing, '.$themeCount.'+ templates, job-match scoring, and one-click PDF export.',
+            'keywords' => config('seo.keywords'),
             'canonical' => route('home', absolute: true),
         ];
         $schemas = [
             \App\Support\Seo::organizationSchema(),
             \App\Support\Seo::websiteSchema(),
             \App\Support\Seo::softwareApplicationSchema(),
+            \App\Support\Seo::faqSchema($homepageFaqs),
         ];
     @endphp
     @include('partials.seo-meta')
@@ -86,11 +96,12 @@
                     New · Job description → full resume in seconds
                 </span>
                 <h1 class="mt-6 text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
+                    <span class="block text-[0.55em] font-bold uppercase tracking-widest text-indigo-600 sm:text-[0.5em]">AI Resume Builder</span>
                     Paste a job description.
                     <span class="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent">Get a tailored resume.</span>
                 </h1>
                 <p class="mt-5 text-lg leading-relaxed text-slate-600">
-                    Copy any job posting — we extract keywords, write your summary & bullets, and build an ATS-ready resume you can edit and download as PDF. No blank-page stress.
+                    <strong class="font-semibold text-slate-800">airesumebuilder.co.in</strong> — copy any job posting and our AI extracts keywords, writes your summary &amp; bullets, and builds an ATS-ready resume you can edit and download as PDF.
                 </p>
                 <div class="mt-8 flex flex-wrap items-center gap-3">
                     <a href="{{ $jdCreateUrl }}" class="landing-btn-primary">
@@ -578,7 +589,7 @@
             </div>
             <div class="mt-10 space-y-3">
                 @php
-                    $faqs = [
+                    $faqs = $homepageFaqs ?? [
                         ['Can I create a resume from a job description?', 'Yes — paste any job posting on our JD → Resume page. AI extracts keywords and generates a tailored resume with headline, summary, skills, and experience bullets. You can edit everything before downloading.'],
                         ['Is it free to start?', 'Yes. Create an account and build your resume without a credit card. Upgrade when you need more downloads, themes, or AI credits.'],
                         ['Will my resume pass ATS systems?', 'Yes. Templates are designed for clean parsing, and the ATS checker scores your resume against any job description with keyword tips.'],

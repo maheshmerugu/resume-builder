@@ -2,8 +2,6 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Vite;
-
 class Seo
 {
     /**
@@ -50,6 +48,7 @@ class Seo
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
             'name' => config('seo.site_name'),
+            'alternateName' => config('seo.alternate_names'),
             'url' => config('app.url'),
             'email' => config('seo.contact_email'),
             'logo' => self::ogImage(),
@@ -65,8 +64,10 @@ class Seo
             '@context' => 'https://schema.org',
             '@type' => 'WebSite',
             'name' => config('seo.site_name'),
+            'alternateName' => config('seo.alternate_names'),
             'url' => config('app.url'),
             'description' => config('seo.default_description'),
+            'inLanguage' => 'en-IN',
             'publisher' => [
                 '@type' => 'Organization',
                 'name' => config('seo.site_name'),
@@ -81,17 +82,46 @@ class Seo
     {
         return [
             '@context' => 'https://schema.org',
-            '@type' => 'SoftwareApplication',
+            '@type' => 'WebApplication',
             'name' => config('seo.site_name'),
+            'alternateName' => 'AI Resume Maker',
             'applicationCategory' => 'BusinessApplication',
+            'applicationSubCategory' => 'Resume Builder',
             'operatingSystem' => 'Web',
+            'browserRequirements' => 'Requires JavaScript',
             'url' => config('app.url'),
             'description' => config('seo.default_description'),
+            'featureList' => [
+                'AI resume from job description',
+                'ATS resume checker',
+                'Professional resume templates',
+                'PDF export',
+            ],
             'offers' => [
                 '@type' => 'Offer',
                 'price' => '0',
                 'priceCurrency' => 'INR',
             ],
+        ];
+    }
+
+    /**
+     * @param  array<int, array{0: string, 1: string}>  $faqs
+     * @return array<string, mixed>
+     */
+    public static function faqSchema(array $faqs): array
+    {
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => collect($faqs)->map(fn (array $faq) => [
+                '@type' => 'Question',
+                'name' => $faq[0],
+                'acceptedAnswer' => [
+                    '@type' => 'Answer',
+                    'text' => $faq[1],
+                ],
+            ])->values()->all(),
         ];
     }
 

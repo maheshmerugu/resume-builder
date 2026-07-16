@@ -18,6 +18,8 @@ class SeoTest extends TestCase
         $response->assertSee('rel="canonical"', false);
         $response->assertSee('property="og:title"', false);
         $response->assertSee('application/ld+json', false);
+        $response->assertSee('FAQPage', false);
+        $response->assertSee('AI Resume Builder', false);
     }
 
     public function test_sitemap_returns_xml_with_public_urls(): void
