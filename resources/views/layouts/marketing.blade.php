@@ -39,7 +39,10 @@
     <footer class="border-t border-slate-200 bg-slate-50">
         <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
             <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
-                <p class="text-sm text-slate-500">&copy; {{ date('Y') }} AI Resume Builder. All rights reserved.</p>
+                <div class="flex flex-col items-center gap-1 sm:items-start">
+                    <p class="text-sm text-slate-500">&copy; {{ date('Y') }} AI Resume Builder. All rights reserved.</p>
+                    <p class="text-xs text-slate-400">{{ number_format($pageVisits ?? 0) }} page visits</p>
+                </div>
                 <div class="flex gap-6 text-sm text-slate-600">
                     <a href="{{ route('home') }}" class="hover:text-indigo-600">Home</a>
                     <a href="{{ route('blog.index') }}" class="hover:text-indigo-600">Blog</a>

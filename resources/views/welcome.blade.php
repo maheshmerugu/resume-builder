@@ -708,7 +708,10 @@
                 </div>
             </div>
             <div class="mt-10 flex flex-col items-center justify-between gap-4 border-t border-slate-200 pt-8 text-sm text-slate-500 sm:flex-row">
-                <p>&copy; {{ date('Y') }} AI Resume Builder. All rights reserved.</p>
+                <div class="flex flex-col items-center gap-1 sm:items-start">
+                    <p>&copy; {{ date('Y') }} AI Resume Builder. All rights reserved.</p>
+                    <p class="text-xs text-slate-400">{{ number_format($pageVisits ?? 0) }} page visits</p>
+                </div>
                 <p class="text-xs">Made for job seekers in India and worldwide.</p>
             </div>
         </div>
